@@ -193,63 +193,81 @@ These cached demo results ensure instant transcript, translation, and analytics 
 
 ```mermaid
 graph TB
-    subgraph "User Interface Layer"
-        A[FastAPI Web Interface]
-        B[Interactive Visualizations]
-        C[Real-time Progress Tracking]
-        D[Multi-format Downloads]
-    end
-    
-    subgraph "Application Layer"
-        E[AudioIntelligencePipeline]
-        F[Model Preloader]
-        G[Background Task Manager]
-        H[API Endpoints]
-    end
-    
-    subgraph "AI Processing Layer"
-        I[Speaker Diarization]
-        J[Speech Recognition]
-        K[Neural Translation]
-        L[Output Formatting]
-    end
-    
-    subgraph "Data Layer"
-        M[Model Cache]
-        N[Audio Storage]
-        O[Result Storage]
-        P[Configuration]
-    end
-    
-    subgraph "External Services"
-        Q[HuggingFace Hub]
-        R[pyannote.audio Models]
-        S[Whisper Models]
-        T[Translation Models]
-    end
-    
-    A --> E
-    B --> F
-    C --> G
-    D --> H
-    E --> I
-    E --> J
-    E --> K
-    E --> L
-    I --> M
-    J --> N
-    K --> O
-    L --> P
-    F --> Q
-    Q --> R
-    Q --> S
-    Q --> T
-    
-    E --> F
-    F --> G
-    G --> H
-    M --> N
-    N --> O
+
+%% Define classes for styling
+classDef ui fill:#cce5ff,stroke:#004085,stroke-width:2px;
+classDef app fill:#d4edda,stroke:#155724,stroke-width:2px;
+classDef ai fill:#f8d7da,stroke:#721c24,stroke-width:2px;
+classDef data fill:#fff3cd,stroke:#856404,stroke-width:2px;
+classDef external fill:#e2e3e5,stroke:#383d41,stroke-width:2px;
+
+%% UI Layer
+subgraph "User Interface Layer"
+    A[FastAPI Web Interface]
+    B[Interactive Visualizations]
+    C[Real-time Progress Tracking]
+    D[Multi-format Downloads]
+end
+class A,B,C,D ui;
+
+%% Application Layer
+subgraph "Application Layer"
+    E[AudioIntelligencePipeline]
+    F[Model Preloader]
+    G[Background Task Manager]
+    H[API Endpoints]
+end
+class E,F,G,H app;
+
+%% AI Processing Layer
+subgraph "AI Processing Layer"
+    I[Speaker Diarization]
+    J[Speech Recognition]
+    K[Neural Translation]
+    L[Output Formatting]
+end
+class I,J,K,L ai;
+
+%% Data Layer
+subgraph "Data Layer"
+    M[Model Cache]
+    N[Audio Storage]
+    O[Result Storage]
+    P[Configuration]
+end
+class M,N,O,P data;
+
+%% External Services
+subgraph "External Services"
+    Q[HuggingFace Hub]
+    R[pyannote.audio Models]
+    S[Whisper Models]
+    T[Translation Models]
+end
+class Q,R,S,T external;
+
+%% Connections
+A --> E
+B --> F
+C --> G
+D --> H
+E --> I
+E --> J
+E --> K
+E --> L
+I --> M
+J --> N
+K --> O
+L --> P
+F --> Q
+Q --> R
+Q --> S
+Q --> T
+E --> F
+F --> G
+G --> H
+M --> N
+N --> O
 ```
 
 **Key Architecture Features:**

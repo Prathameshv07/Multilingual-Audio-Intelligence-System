@@ -40,6 +40,11 @@ The Multilingual Audio Intelligence System is an advanced AI-powered platform th
 
 ![Summary Output](/static/imgs/demo_res_summary.png)
 
+## Demo & Documentation
+
+- 🎥 [Video Preview]()
+- 📄 [Project Documentation](DOCUMENTATION.md)
+
 ## Installation and Quick Start
 
 1. **Clone the Repository:**
@@ -78,24 +83,27 @@ The Multilingual Audio Intelligence System is an advanced AI-powered platform th
 ## File Structure
 
 ```
-audio_challenge/
-├── web_app.py               # FastAPI application
-├── run_fastapi.py           # Startup script
-├── requirements.txt         # Dependencies
+Multilingual-Audio-Intelligence-System/
+├── web_app.py                      # FastAPI application with RESTful endpoints
+├── model_preloader.py              # Intelligent model loading with progress tracking
+├── run_fastapi.py                  # Application startup script with preloading
+├── src/
+│   ├── main.py                     # AudioIntelligencePipeline orchestrator
+│   ├── audio_processor.py          # Advanced audio preprocessing and normalization
+│   ├── speaker_diarizer.py         # pyannote.audio integration for speaker identification
+│   ├── speech_recognizer.py        # faster-whisper ASR with language detection
+│   ├── translator.py               # Neural machine translation with multiple models
+│   ├── output_formatter.py         # Multi-format result generation and export
+│   └── utils.py                    # Utility functions and performance monitoring
 ├── templates/
-│   └── index.html           # Main interface
-├── src/                     # Core modules
-│   ├── main.py              # Pipeline orchestrator
-│   ├── audio_processor.py   # Audio preprocessing
-│   ├── speaker_diarizer.py  # Speaker identification
-│   ├── speech_recognizer.py # ASR with language detection
-│   ├── translator.py        # Neural machine translation
-│   ├── output_formatter.py  # Output generation
-│   └── utils.py             # Utility functions
-├── static/                  # Static assets
-├── uploads/                 # Uploaded files
-└── outputs/                 # Generated outputs
-└── README.md
+│   └── index.html                  # Responsive web interface with home page
+├── static/                         # Static assets and client-side resources
+├── model_cache/                    # Intelligent model caching directory
+├── uploads/                        # User audio file storage
+├── outputs/                        # Generated results and downloads
+├── requirements.txt                # Comprehensive dependency specification
+├── Dockerfile                      # Production-ready containerization
+└── config.example.env              # Environment configuration template
 ```
 
 ## Configuration
