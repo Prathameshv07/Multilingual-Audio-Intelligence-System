@@ -16,7 +16,7 @@ The primary objective of the Multilingual Audio Intelligence System is to revolu
 
 ## 3. Technologies and Tools
 
-- **Programming Language:** Python 3.9+
+- **Programming Language:** Python 3.8+
 - **Web Framework:** FastAPI with Uvicorn ASGI server for high-performance async operations
 - **Frontend Technology:** HTML5, TailwindCSS, and Vanilla JavaScript for responsive user interface
 - **Machine Learning Libraries:**
@@ -45,7 +45,7 @@ The primary objective of the Multilingual Audio Intelligence System is to revolu
   - Storage: 10GB+ available space for application, models, and processing cache
   - GPU: Optional NVIDIA GPU with 4GB+ VRAM for accelerated processing
   - Network: Stable internet connection for initial model downloading
-- **Software:** Python 3.9+, pip package manager, Docker (optional), web browser (Chrome, Firefox, Safari, Edge)
+- **Software:** Python 3.8+, pip package manager, Docker (optional), web browser (Chrome, Firefox, Safari, Edge)
 
 ## 5. Setup Instructions
 
@@ -53,8 +53,8 @@ The primary objective of the Multilingual Audio Intelligence System is to revolu
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/your-username/multilingual-audio-intelligence.git
-   cd multilingual-audio-intelligence
+   git clone https://github.com/Prathameshv07/Multilingual-Audio-Intelligence-System.git
+   cd Multilingual-Audio-Intelligence-System
    ```
 
 2. **Create and Activate Conda Environment:**
@@ -98,7 +98,7 @@ The primary objective of the Multilingual Audio Intelligence System is to revolu
 ## 6. Detailed Project Structure
 
 ```
-multilingual-audio-intelligence/
+Multilingual-Audio-Intelligence-System/
 ├── web_app.py                      # FastAPI application with RESTful endpoints
 ├── model_preloader.py              # Intelligent model loading with progress tracking
 ├── run_fastapi.py                  # Application startup script with preloading
@@ -117,10 +117,9 @@ multilingual-audio-intelligence/
 ├── model_cache/                    # Intelligent model caching directory
 ├── uploads/                        # User audio file storage
 ├── outputs/                        # Generated results and downloads
-├── requirements.txt          # Comprehensive dependency specification
+├── requirements.txt                # Comprehensive dependency specification
 ├── Dockerfile                      # Production-ready containerization
-├── DEPLOYMENT_GUIDE.md            # Comprehensive deployment instructions
-└── config.example.env             # Environment configuration template
+└── config.example.env              # Environment configuration template
 ```
 
 ## 6.1 Demo Mode & Sample Files
@@ -129,8 +128,8 @@ The application ships with a professional demo mode for instant showcases withou
 
 - Demo files are automatically downloaded at startup (if missing) into `demo_audio/` and preprocessed into `demo_results/` for blazing-fast responses.
 - Available demos:
-  - `Yuri_Kizaki.mp3` — Japanese narration about website communication
-  - `Film_Podcast.mp3` — French podcast discussing films like The Social Network
+  - [Yuri_Kizaki.mp3](https://www.mitsue.co.jp/service/audio_and_video/audio_production/media/narrators_sample/yuri_kizaki/03.mp3) — Japanese narration about website communication
+  - [Film_Podcast.mp3](https://www.lightbulblanguages.co.uk/resources/audio/film-podcast.mp3) — French podcast discussing films like The Social Network
 - Static serving: demo audio is exposed at `/demo_audio/<filename>` for local preview.
 - The UI provides two selectable cards under Demo Mode; once selected, the system loads a preview and renders a waveform using HTML5 Canvas (Web Audio API) before processing.
 

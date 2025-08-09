@@ -1,6 +1,12 @@
 # 🎵 Multilingual Audio Intelligence System
 
-## New Features ✨
+![Multilingual Audio Intelligence System Banner](/static/imgs/banner.png)
+
+## Overview
+
+The Multilingual Audio Intelligence System is an advanced AI-powered platform that combines state-of-the-art speaker diarization, automatic speech recognition, and neural machine translation to deliver comprehensive audio analysis capabilities. This sophisticated system processes multilingual audio content, identifies individual speakers, transcribes speech with high accuracy, and provides intelligent translations across multiple languages, transforming raw audio into structured, actionable insights.
+
+## Features
 
 ### Demo Mode with Professional Audio Files
 - **Yuri Kizaki - Japanese Audio**: Professional voice message about website communication (23 seconds)
@@ -14,111 +20,81 @@
 - **Improved Transcript Display**: Color-coded confidence levels and clear translation sections
 - **Professional Audio Preview**: Audio player with waveform visualization
 
-### Technical Improvements
-- Automatic demo file download from original sources
-- Cached preprocessing results for instant demo response
-- Enhanced error handling for missing or corrupted demo files
-- Web Audio API integration for dynamic waveform generation
+### Screenshots
 
-## Quick Start
+#### 🎬 Demo Banner
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
+![Demo Banner](/static/imgs/demo_banner.png)
 
-# Start the application (includes demo file setup)
-python run_fastapi.py
+#### 📝 Transcript with Translation
 
-# Access the application
-# http://127.0.0.1:8000
-```
+![Transcript with Translation](/static/imgs/demo_res_transcript_translate.png)
 
-## Demo Mode Usage
+#### 📊 Visual Representation
 
-1. **Select Demo Mode**: Click the "Demo Mode" button in the header
-2. **Choose Audio File**: Select either Japanese or French demo audio
-3. **Preview**: Listen to the audio and view the waveform
-4. **Process**: Click "Process Audio" for instant results
-5. **Explore**: View transcripts, translations, and analytics
+<p align="center">
+  <img src="static/imgs/demo_res_visual.png" alt="Visual Output"/>
+</p>
 
-## Full Processing Mode
+#### 🧠 Summary Output
 
-1. **Upload Audio**: Drag & drop or click to upload your audio file
-2. **Preview**: View waveform and listen to your audio
-3. **Configure**: Select model size and target language
-4. **Process**: Real-time processing with progress tracking
-5. **Download**: Export results in JSON, SRT, or TXT format
+![Summary Output](/static/imgs/demo_res_summary.png)
 
-## Features
+## Installation and Quick Start
 
-## System Architecture
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/Prathameshv07/Multilingual-Audio-Intelligence-System.git
+   cd Multilingual-Audio-Intelligence-System
+   ```
 
-### Core Components
+2. **Create and Activate Conda Environment:**
+   ```bash
+   conda create --name audio_challenge python=3.9
+   conda activate audio_challenge
+   ```
 
-- **FastAPI Backend** - Production-ready web framework
-- **HTML/TailwindCSS Frontend** - Clean, professional interface
-- **Audio Processing Pipeline** - Integrated ML models
-- **RESTful API** - Standardized endpoints
+3. **Install Dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Key Features
+4. **Configure Environment Variables:**
+   ```bash
+   cp config.example.env .env
+   # Edit .env file with your HUGGINGFACE_TOKEN for accessing gated models
+   ```
 
-- **Speaker Diarization** - Identify "who spoke when"
-- **Speech Recognition** - Convert speech to text
-- **Language Detection** - Automatic language identification
-- **Neural Translation** - Multi-language translation
-- **Interactive Visualization** - Waveform analysis
-- **Multiple Export Formats** - JSON, SRT, TXT
+5. **Preload AI Models (Recommended):**
+   ```bash
+   python model_preloader.py
+   ```
 
-## Technology Stack
-
-### Backend
-- **FastAPI** - Modern Python web framework
-- **Uvicorn** - ASGI server
-- **PyTorch** - Deep learning framework
-- **pyannote.audio** - Speaker diarization
-- **faster-whisper** - Speech recognition
-- **Helsinki-NLP** - Neural translation
-
-### Frontend
-- **HTML5/CSS3** - Clean markup
-- **TailwindCSS** - Utility-first styling
-- **JavaScript (Vanilla)** - Client-side logic
-- **Plotly.js** - Interactive visualizations
-- **Font Awesome** - Professional icons
-
-## API Endpoints
-
-### Core Endpoints
-- `GET /` - Main application interface
-- `POST /api/upload` - Upload and process audio
-- `GET /api/status/{task_id}` - Check processing status
-- `GET /api/results/{task_id}` - Retrieve results
-- `GET /api/download/{task_id}/{format}` - Download outputs
-
-### Demo Endpoints
-- `POST /api/demo-process` - Quick demo processing
-- `GET /api/system-info` - System information
+6. **Initialize Application:**
+   ```bash
+   python run_fastapi.py
+   ```
 
 ## File Structure
 
 ```
 audio_challenge/
-├── web_app.py              # FastAPI application
-├── run_fastapi.py          # Startup script
-├── requirements.txt  # Dependencies
+├── web_app.py               # FastAPI application
+├── run_fastapi.py           # Startup script
+├── requirements.txt         # Dependencies
 ├── templates/
-│   └── index.html          # Main interface
-├── src/                    # Core modules
-│   ├── main.py            # Pipeline orchestrator
-│   ├── audio_processor.py  # Audio preprocessing
-│   ├── speaker_diarizer.py # Speaker identification
+│   └── index.html           # Main interface
+├── src/                     # Core modules
+│   ├── main.py              # Pipeline orchestrator
+│   ├── audio_processor.py   # Audio preprocessing
+│   ├── speaker_diarizer.py  # Speaker identification
 │   ├── speech_recognizer.py # ASR with language detection
-│   ├── translator.py      # Neural machine translation
-│   ├── output_formatter.py # Output generation
-│   └── utils.py           # Utility functions
-├── static/                # Static assets
-├── uploads/               # Uploaded files
-└── outputs/               # Generated outputs
+│   ├── translator.py        # Neural machine translation
+│   ├── output_formatter.py  # Output generation
+│   └── utils.py             # Utility functions
+├── static/                  # Static assets
+├── uploads/                 # Uploaded files
+└── outputs/                 # Generated outputs
 └── README.md
 ```
 
@@ -179,10 +155,6 @@ uvicorn web_app:app --host 0.0.0.0 --port 8000
 - Verify audio file format and size
 - Ensure all dependencies are installed
 - Check available system memory
-
-## License
-
-MIT License - See LICENSE file for details
 
 ## Support
 
