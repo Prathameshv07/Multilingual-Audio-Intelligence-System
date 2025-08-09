@@ -193,81 +193,111 @@ These cached demo results ensure instant transcript, translation, and analytics 
 
 ```mermaid
 graph TB
+    subgraph "User Interface Layer"
+        A[FastAPI Web Interface]
+        B[Interactive Visualizations]
+        C[Real-time Progress Tracking]
+        D[Multi-format Downloads]
+    end
+    
+    subgraph "Application Layer"
+        E[AudioIntelligencePipeline]
+        F[Model Preloader]
+        G[Background Task Manager]
+        H[API Endpoints]
+    end
+    
+    subgraph "AI Processing Layer"
+        I[Speaker Diarization]
+        J[Speech Recognition]
+        K[Neural Translation]
+        L[Output Formatting]
+    end
+    
+    subgraph "Data Layer"
+        M[Model Cache]
+        N[Audio Storage]
+        O[Result Storage]
+        P[Configuration]
+    end
+    
+    subgraph "External Services"
+        Q[HuggingFace Hub]
+        R[pyannote.audio Models]
+        S[Whisper Models]
+        T[Translation Models]
+    end
+    
+    %% UI Layer connections
+    A --> E
+    B --> E
+    C --> G
+    D --> H
+    
+    %% Application Layer internal connections
+    E --> F
+    F --> G
+    G --> H
+    H --> E
+    
+    %% Application to AI Processing connections
+    E --> I
+    E --> J
+    E --> K
+    E --> L
+    
+    %% AI Processing to Data Layer connections
+    I --> M
+    J --> M
+    K --> M
+    L --> M
+    I --> N
+    J --> N
+    K --> O
+    L --> O
+    
+    %% Data Layer connections
+    M --> N
+    N --> O
+    P --> M
+    P --> N
+    P --> O
+    
+    %% External Services connections
+    F --> Q
+    Q --> R
+    Q --> S
+    Q --> T
+    R --> I
+    S --> J
+    T --> K
 
-%% Define classes for styling
-classDef ui fill:#cce5ff,stroke:#004085,stroke-width:2px;
-classDef app fill:#d4edda,stroke:#155724,stroke-width:2px;
-classDef ai fill:#f8d7da,stroke:#721c24,stroke-width:2px;
-classDef data fill:#fff3cd,stroke:#856404,stroke-width:2px;
-classDef external fill:#e2e3e5,stroke:#383d41,stroke-width:2px;
+    %% Styling for User Interface Layer
+    classDef uiLayer fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    class A,B,C,D uiLayer
 
-%% UI Layer
-subgraph "User Interface Layer"
-    A[FastAPI Web Interface]
-    B[Interactive Visualizations]
-    C[Real-time Progress Tracking]
-    D[Multi-format Downloads]
-end
-class A,B,C,D ui;
+    %% Styling for Application Layer
+    classDef appLayer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    class E,F,G,H appLayer
 
-%% Application Layer
-subgraph "Application Layer"
-    E[AudioIntelligencePipeline]
-    F[Model Preloader]
-    G[Background Task Manager]
-    H[API Endpoints]
-end
-class E,F,G,H app;
+    %% Styling for AI Processing Layer
+    classDef aiLayer fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    class I,J,K,L aiLayer
 
-%% AI Processing Layer
-subgraph "AI Processing Layer"
-    I[Speaker Diarization]
-    J[Speech Recognition]
-    K[Neural Translation]
-    L[Output Formatting]
-end
-class I,J,K,L ai;
+    %% Styling for Data Layer
+    classDef dataLayer fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    class M,N,O,P dataLayer
 
-%% Data Layer
-subgraph "Data Layer"
-    M[Model Cache]
-    N[Audio Storage]
-    O[Result Storage]
-    P[Configuration]
-end
-class M,N,O,P data;
+    %% Styling for External Services
+    classDef extLayer fill:#ffebee,stroke:#d32f2f,stroke-width:2px,color:#000
+    class Q,R,S,T extLayer
 
-%% External Services
-subgraph "External Services"
-    Q[HuggingFace Hub]
-    R[pyannote.audio Models]
-    S[Whisper Models]
-    T[Translation Models]
-end
-class Q,R,S,T external;
-
-%% Connections
-A --> E
-B --> F
-C --> G
-D --> H
-E --> I
-E --> J
-E --> K
-E --> L
-I --> M
-J --> N
-K --> O
-L --> P
-F --> Q
-Q --> R
-Q --> S
-Q --> T
-E --> F
-F --> G
-G --> H
-M --> N
-N --> O
+    %% Subgraph styling
+    style User Interface Layer fill:#e1f5fe,stroke:#0277bd,stroke-width:3px
+    style Application Layer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
+    style AI Processing Layer fill:#e8f5e8,stroke:#388e3c,stroke-width:3px
+    style Data Layer fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    style External Services fill:#ffebee,stroke:#d32f2f,stroke-width:3px
 ```
 
 **Key Architecture Features:**
