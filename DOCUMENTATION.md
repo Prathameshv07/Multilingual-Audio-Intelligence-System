@@ -193,111 +193,62 @@ These cached demo results ensure instant transcript, translation, and analytics 
 
 ```mermaid
 graph TB
-    subgraph "User Interface Layer"
+    subgraph "User Interface"
         A[FastAPI Web Interface]
-        B[Interactive Visualizations]
-        C[Real-time Progress Tracking]
-        D[Multi-format Downloads]
+        B[Real-time Progress]
     end
     
-    subgraph "Application Layer"
-        E[AudioIntelligencePipeline]
-        F[Model Preloader]
-        G[Background Task Manager]
-        H[API Endpoints]
+    subgraph "Core Application"
+        C[AudioIntelligencePipeline]
+        D[Background Tasks]
+        E[API Endpoints]
     end
     
-    subgraph "AI Processing Layer"
-        I[Speaker Diarization]
-        J[Speech Recognition]
-        K[Neural Translation]
-        L[Output Formatting]
+    subgraph "AI Processing"
+        F[Speaker Diarization]
+        G[Speech Recognition]
+        H[Neural Translation]
     end
     
-    subgraph "Data Layer"
-        M[Model Cache]
-        N[Audio Storage]
-        O[Result Storage]
-        P[Configuration]
+    subgraph "Storage & Models"
+        I[Model Cache]
+        J[Audio/Result Storage]
+        K[HuggingFace Models]
     end
     
-    subgraph "External Services"
-        Q[HuggingFace Hub]
-        R[pyannote.audio Models]
-        S[Whisper Models]
-        T[Translation Models]
-    end
-    
-    %% UI Layer connections
+    %% Main flow connections
+    A --> C
+    B --> D
     A --> E
-    B --> E
+    E --> C
+    
+    C --> F
     C --> G
-    D --> H
+    C --> H
     
-    %% Application Layer internal connections
-    E --> F
-    F --> G
-    G --> H
-    H --> E
+    F --> I
+    G --> I
+    H --> I
     
-    %% Application to AI Processing connections
-    E --> I
-    E --> J
-    E --> K
-    E --> L
+    F --> J
+    G --> J
+    H --> J
     
-    %% AI Processing to Data Layer connections
-    I --> M
-    J --> M
-    K --> M
-    L --> M
-    I --> N
-    J --> N
-    K --> O
-    L --> O
+    I --> K
+    K --> F
+    K --> G
+    K --> H
     
-    %% Data Layer connections
-    M --> N
-    N --> O
-    P --> M
-    P --> N
-    P --> O
+    %% Styling
+    classDef ui fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef app fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef ai fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef storage fill:#fff3e0,stroke:#f57c00,stroke-width:2px
     
-    %% External Services connections
-    F --> Q
-    Q --> R
-    Q --> S
-    Q --> T
-    R --> I
-    S --> J
-    T --> K
-
-    %% Styling for User Interface Layer
-    classDef uiLayer fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
-    class A,B,C,D uiLayer
-
-    %% Styling for Application Layer
-    classDef appLayer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
-    class E,F,G,H appLayer
-
-    %% Styling for AI Processing Layer
-    classDef aiLayer fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
-    class I,J,K,L aiLayer
-
-    %% Styling for Data Layer
-    classDef dataLayer fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
-    class M,N,O,P dataLayer
-
-    %% Styling for External Services
-    classDef extLayer fill:#ffebee,stroke:#d32f2f,stroke-width:2px,color:#000
-    class Q,R,S,T extLayer
-
-    %% Subgraph styling
-    style User Interface Layer fill:#e1f5fe,stroke:#0277bd,stroke-width:3px
-    style Application Layer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
-    style AI Processing Layer fill:#e8f5e8,stroke:#388e3c,stroke-width:3px
-    style Data Layer fill:#fff3e0,stroke:#f57c00,stroke-width:3px
-    style External Services fill:#ffebee,stroke:#d32f2f,stroke-width:3px
+    class A,B ui
+    class C,D,E app
+    class F,G,H ai
+    class I,J,K storage
 ```
 
 **Key Architecture Features:**
