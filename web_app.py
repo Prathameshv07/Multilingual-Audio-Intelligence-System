@@ -857,7 +857,8 @@ async def get_system_info():
                 else:
                     health_status = "Error"
                     health_color = "yellow"
-            except Exception:
+            except Exception as e:
+                print("An exception occurred while getting system info: ", e)
                 health_status = "Server Down"
                 health_color = "red"
 
