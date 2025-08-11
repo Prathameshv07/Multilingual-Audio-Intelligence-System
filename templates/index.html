@@ -269,7 +269,6 @@
                                                 <p class="text-sm text-gray-500 mt-1">Audio message about website communication enhancement</p>
                                                 <div class="flex items-center mt-2">
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Japanese</span>
-                                                    <span class="ml-2 text-xs text-gray-500">~23 seconds</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -285,7 +284,6 @@
                                                 <p class="text-sm text-gray-500 mt-1">Discussion about recent movies including Social Network</p>
                                                 <div class="flex items-center mt-2">
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">French</span>
-                                                    <span class="ml-2 text-xs text-gray-500">~25 seconds</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -456,8 +454,8 @@
                 <div id="system-info-content">
                     <div class="loading text-center py-4">
                         <i class="fas fa-spinner text-2xl text-blue-500"></i>
-                        <p class="mt-2 text-gray-600">Loading system information...</p>
                     </div>
+                    <p class="mt-2 text-gray-600">Loading system information...</p>
                 </div>
             </div>
         </div>
@@ -1127,18 +1125,34 @@
         // System info modal
         systemInfoBtn.addEventListener('click', async () => {
             systemInfoModal.classList.remove('hidden');
-            
+
+            const content = document.getElementById('system-info-content');
+            content.innerHTML = `
+                <div class="loading text-center py-4">
+                    <i class="fas fa-spinner text-2xl text-blue-500 animate-spin"></i>
+                    <p class="mt-2 text-gray-600">Loading system information...</p>
+                </div>
+            `;
+
             try {
                 const response = await fetch('/api/system-info');
                 const info = await response.json();
-                
-                const content = document.getElementById('system-info-content');
+
+                const statusColors = {
+                    green: "bg-green-100 text-green-800",
+                    yellow: "bg-yellow-100 text-yellow-800",
+                    red: "bg-red-100 text-red-800",
+                    gray: "bg-gray-100 text-gray-800"
+                };
+
+                const colorClass = statusColors[info.statusColor] || statusColors.gray;
+
                 content.innerHTML = `
                     <div class="space-y-3">
                         <div>
                             <span class="font-medium">Status:</span>
-                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                ${info.status}
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}">
+                                ⬤ ${info.status}
                             </span>
                         </div>
                         <div>
@@ -1156,8 +1170,7 @@
                     </div>
                 `;
             } catch (error) {
-                document.getElementById('system-info-content').innerHTML = 
-                    '<p class="text-red-600">Error loading system information</p>';
+                content.innerHTML = `<p class="text-red-600">Error loading system information</p>`;
             }
         });
 

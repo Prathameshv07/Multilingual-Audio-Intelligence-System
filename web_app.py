@@ -824,21 +824,47 @@ def format_srt_time(seconds: float) -> str:
 @app.get("/api/system-info")
 async def get_system_info():
     """Get system information."""
-    info = {
-        "status": "operational",
-        "version": "1.0.0",
-        "features": [
-            "Speaker Diarization",
-            "Speech Recognition",
-            "Neural Translation",
-            "Interactive Visualization"
-        ]
-    }
     
     if UTILS_AVAILABLE:
         try:
-            sys_info = get_system_info()
-            info.update(sys_info)
+            # from utils import _collect_system_info  # or import as needed
+            # sys_info = _collect_system_info()
+            # sys_info = get_system_info()
+            # info.update(sys_info)
+
+            info = {
+                "version": "1.0.0",
+                "features": [
+                    "Speaker Diarization",
+                    "Speech Recognition",
+                    "Neural Translation",
+                    "Interactive Visualization"
+                ]
+            }
+
+            # Perform the health check
+            health_status = "Unknown"
+            health_color = "gray"
+            
+            try:
+                from fastapi.testclient import TestClient
+                client = TestClient(app)
+                res = client.get("/health")
+
+                if res.status_code == 200 and res.json().get("status") == "ok":
+                    health_status = "Live"
+                    health_color = "green"
+                else:
+                    health_status = "Error"
+                    health_color = "yellow"
+            except Exception:
+                health_status = "Server Down"
+                health_color = "red"
+
+            info["status"] = health_status
+            info["statusColor"] = health_color
+            
+
         except Exception as e:
             logger.error(f"Failed to get system info: {e}")
     
