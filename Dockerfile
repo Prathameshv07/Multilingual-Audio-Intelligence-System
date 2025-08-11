@@ -33,7 +33,9 @@ ENV PYTHONPATH=/app \
     TRANSFORMERS_CACHE=/app/model_cache \
     TORCH_HOME=/app/model_cache \
     XDG_CACHE_HOME=/app/model_cache \
+    PYANNOTE_CACHE=/app/model_cache \
     MPLCONFIGDIR=/tmp/matplotlib
+
 
 EXPOSE 7860
 

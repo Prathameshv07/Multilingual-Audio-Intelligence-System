@@ -10,7 +10,7 @@ short_description: AI system for multilingual transcription and translation
 
 # 🎵 Multilingual Audio Intelligence System
 
-![Multilingual Audio Intelligence System Banner](/static/imgs/banner.png)
+<img src="static/imgs/banner.png" alt="Multilingual Audio Intelligence System Banner"/>
 
 ## Overview
 
@@ -52,7 +52,7 @@ The Multilingual Audio Intelligence System is an advanced AI-powered platform th
 
 ## Demo & Documentation
 
-- 🎥 [Video Preview]()
+- 🎥 [Video Preview](https://drive.google.com/file/d/1dfYM5p9cKGw0C5RBvmyN6DUWgnEZk56M/view)
 - 📄 [Project Documentation](DOCUMENTATION.md)
 
 ## Installation and Quick Start
