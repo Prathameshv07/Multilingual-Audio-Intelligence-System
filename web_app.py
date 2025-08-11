@@ -203,6 +203,7 @@ class DemoManager:
     
     async def process_demo_file(self, demo_id: str, file_path: Path, results_path: Path):
         """Process demo file using actual pipeline and cache results."""
+        config = DEMO_FILES[demo_id]
         try:
             # Initialize pipeline for demo processing
             pipeline = AudioIntelligencePipeline(
