@@ -19,8 +19,8 @@ The Multilingual Audio Intelligence System is an advanced AI-powered platform th
 ## Features
 
 ### Demo Mode with Professional Audio Files
-- **Yuri Kizaki - Japanese Audio**: Professional voice message about website communication (23 seconds)
-- **French Film Podcast**: Discussion about movies including Social Network and Paranormal Activity (25 seconds)
+- **Yuri Kizaki - Japanese Audio**: Professional voice message about website communication
+- **French Film Podcast**: Discussion about movies including Social Network and Paranormal Activity
 - Smart demo file management with automatic download and preprocessing
 - Instant results with cached processing for blazing-fast demonstration
 
