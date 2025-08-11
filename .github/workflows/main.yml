@@ -12,6 +12,13 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+
+      # Ensure Git LFS is installed and fetch binary files
+      - name: Pull LFS files
+        run: |
+          git lfs install
+          git lfs pull
+
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
