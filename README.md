@@ -1,3 +1,13 @@
+---
+title: Multilingual Audio Intelligence System
+emoji: 🎵
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+short_description: AI system for multilingual transcription and translation
+---
+
 # 🎵 Multilingual Audio Intelligence System
 
 ![Multilingual Audio Intelligence System Banner](/static/imgs/banner.png)
@@ -24,11 +34,11 @@ The Multilingual Audio Intelligence System is an advanced AI-powered platform th
 
 #### 🎬 Demo Banner
 
-![Demo Banner](/static/imgs/demo_banner.png)
+<img src="static/imgs/demo_banner.png" alt="Demo Banner"/>
 
 #### 📝 Transcript with Translation
 
-![Transcript with Translation](/static/imgs/demo_res_transcript_translate.png)
+<img src="static/imgs/demo_res_transcript_translate.png" alt="Transcript with Translation"/>
 
 #### 📊 Visual Representation
 
@@ -38,7 +48,7 @@ The Multilingual Audio Intelligence System is an advanced AI-powered platform th
 
 #### 🧠 Summary Output
 
-![Summary Output](/static/imgs/demo_res_summary.png)
+<img src="static/imgs/demo_res_summary.png" alt="Summary Output"/>
 
 ## Demo & Documentation
 
@@ -168,4 +178,8 @@ uvicorn web_app:app --host 0.0.0.0 --port 8000
 
 - **Documentation**: Check `/api/docs` endpoint
 - **System Info**: Use the info button in the web interface
-- **Logs**: Monitor terminal output for detailed information 
+- **Logs**: Monitor terminal output for detailed information
+
+---
+
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference

@@ -67,8 +67,14 @@
                         <i class="fas fa-cog mr-2"></i>
                         Full Processing
                     </button>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        ⬤ Operational
+                    <!-- <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <!-- <i class="fas fa-circle w-2 h-2 mr-2"></i> -->
+                    <!-- <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"> -->
+                        <!-- <i class="fas fa-circle w-2 h-2 mr-1"></i> -->
+                        <!--⬤ Operational
+                    </span> -->
+                    <span id="server-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                        ⬤ Checking...
                     </span>
                     <button id="system-info-btn" class="text-gray-500 hover:text-gray-700">
                         <i class="fas fa-info-circle"></i>
@@ -423,7 +429,6 @@
                             <div class="grid grid-cols-1 gap-6">
                                 <div id="language-chart" style="width:100%;height:300px;"></div>
                                 <div id="speaker-timeline" style="width:100%;height:300px;"></div>
-                                <div id="confidence-chart" style="width:100%;height:300px;"></div>
                             </div>
                         </div>
 
@@ -484,6 +489,28 @@
         const demoModeBtn = document.getElementById('demo-mode-btn');
         const processingModeBtn = document.getElementById('processing-mode-btn');
         const processingModeIndicator = document.getElementById('processing-mode-indicator');
+
+        async function updateServerStatus() {
+            const el = document.getElementById("server-status");
+            try {
+                const res = await fetch("/health"); // or your FastAPI health endpoint
+                if (!res.ok) throw new Error("Bad response");
+                el.textContent = "⬤ Live";
+                el.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
+            } catch (err) {
+                // Could be error or down
+                fetch("/").catch(() => {
+                    el.textContent = "⬤ Server Down";
+                    el.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800";
+                });
+
+                el.textContent = "⬤ Error";
+                el.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800";
+            }
+        }
+        // setInterval(updateServerStatus, 5000);
+        // updateServerStatus();
+        document.addEventListener("DOMContentLoaded", updateServerStatus);
 
         // Navigation handling
         function showHome() {
@@ -579,7 +606,7 @@
                     'yuri_kizaki': {
                         name: 'Yuri Kizaki - Japanese Audio',
                         filename: 'Yuri_Kizaki.mp3',
-                        duration: 22.8
+                        duration: 23.0
                     },
                     'film_podcast': {
                         name: 'French Film Podcast',
@@ -908,8 +935,6 @@
             // Speaker Timeline
             createSpeakerTimeline(segments);
             
-            // Confidence Analysis
-            createConfidenceChart(segments);
         }
 
         function createLanguageChart(segments) {
@@ -985,45 +1010,6 @@
             Plotly.newPlot('speaker-timeline', data, layout, {responsive: true});
         }
 
-        function createConfidenceChart(segments) {
-            const confidenceRanges = {
-                'High (90-100%)': 0,
-                'Medium (70-89%)': 0, 
-                'Low (50-69%)': 0,
-                'Very Low (<50%)': 0
-            };
-
-            segments.forEach(seg => {
-                const confidence = seg.confidence * 100;
-                if (confidence >= 90) confidenceRanges['High (90-100%)']++;
-                else if (confidence >= 70) confidenceRanges['Medium (70-89%)']++;
-                else if (confidence >= 50) confidenceRanges['Low (50-69%)']++;
-                else confidenceRanges['Very Low (<50%)']++;
-            });
-
-            const data = [{
-                x: Object.keys(confidenceRanges),
-                y: Object.values(confidenceRanges),
-                type: 'bar',
-                marker: {
-                    color: ['#10B981', '#F59E0B', '#EF4444', '#6B7280']
-                }
-            }];
-
-            const layout = {
-                title: {
-                    text: '📊 Recognition Confidence Distribution',
-                    font: { size: 18, family: 'Arial, sans-serif' }
-                },
-                xaxis: { title: 'Confidence Level' },
-                yaxis: { title: 'Number of Segments' },
-                height: 300,
-                margin: { t: 50, b: 80, l: 50, r: 20 }
-            };
-
-            Plotly.newPlot('confidence-chart', data, layout, {responsive: true});
-        }
-
         function populateTranscript(segments) {
             const transcriptContent = document.getElementById('transcript-content');
             transcriptContent.innerHTML = '';
@@ -1031,12 +1017,6 @@
             segments.forEach((segment, index) => {
                 const segmentDiv = document.createElement('div');
                 segmentDiv.className = 'mb-6 p-4 border border-gray-200 rounded-lg bg-white shadow-sm';
-                
-                // Ensure confidence is a positive percentage
-                const confidencePercent = Math.round(Math.abs(segment.confidence * 100));
-                const confidenceColor = confidencePercent >= 90 ? 'bg-green-100 text-green-800' : 
-                                       confidencePercent >= 70 ? 'bg-yellow-100 text-yellow-800' : 
-                                       'bg-red-100 text-red-800';
                 
                 segmentDiv.innerHTML = `
                     <div class="flex justify-between items-start mb-3">
@@ -1053,9 +1033,6 @@
                             <div class="flex items-center mb-2">
                                 <i class="fas fa-microphone text-gray-600 mr-2"></i>
                                 <span class="text-sm font-medium text-gray-700">Original (${segment.language.toUpperCase()})</span>
-                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${confidenceColor}">
-                                    ${confidencePercent}% confidence
-                                </span>
                             </div>
                             <p class="text-gray-800 leading-relaxed">${segment.text}</p>
                         </div>

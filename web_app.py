@@ -128,6 +128,26 @@ DEMO_FILES = {
     }
 }
 
+@app.get("/health")
+async def health():
+    """Simple health check endpoint."""
+    try:
+        # Basic system check
+        import shutil
+        total, used, free = shutil.disk_usage(".")
+        
+        if free < 50 * 1024 * 1024:  # less than 50MB
+            return {"status": "error", "detail": "Low disk space"}
+        
+        # Check if models are loaded
+        if not hasattr(app.state, "models_loaded") or not app.state.models_loaded:
+            return {"status": "error", "detail": "Models not loaded"}
+        
+        return {"status": "ok"}
+        
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
 # Demo results cache
 demo_results_cache = {}
 
@@ -146,7 +166,7 @@ class DemoManager:
             file_path = self.demo_dir / config["filename"]
             results_path = self.results_dir / f"{demo_id}_results.json"
             
-            # Check if file exists
+            # Check if file exists, download if not
             if not file_path.exists():
                 logger.info(f"Downloading demo file: {config['filename']}")
                 try:
@@ -155,13 +175,13 @@ class DemoManager:
                     logger.error(f"Failed to download {config['filename']}: {e}")
                     continue
             
-            # Check if results exist
+            # Check if results exist, process if not
             if not results_path.exists():
-                logger.info(f"Preprocessing demo file: {config['filename']}")
+                logger.info(f"Processing demo file: {config['filename']}")
                 try:
-                    await self.preprocess_demo_file(demo_id, file_path, results_path)
+                    await self.process_demo_file(demo_id, file_path, results_path)
                 except Exception as e:
-                    logger.error(f"Failed to preprocess {config['filename']}: {e}")
+                    logger.error(f"Failed to process {config['filename']}: {e}")
                     continue
             
             # Load results into cache
@@ -181,109 +201,126 @@ class DemoManager:
         
         logger.info(f"Downloaded demo file: {file_path.name}")
     
-    async def preprocess_demo_file(self, demo_id: str, file_path: Path, results_path: Path):
-        """Preprocess demo file and cache results."""
-        config = DEMO_FILES[demo_id]
+    async def process_demo_file(self, demo_id: str, file_path: Path, results_path: Path):
+        """Process demo file using actual pipeline and cache results."""
+        try:
+            # Initialize pipeline for demo processing
+            pipeline = AudioIntelligencePipeline(
+                whisper_model_size="small",
+                target_language="en",
+                device="auto",
+                hf_token=os.getenv('HUGGINGFACE_TOKEN'),
+                output_dir="./outputs"
+            )
+            
+            # Process the actual audio file
+            logger.info(f"Processing demo file: {file_path}")
+            results = pipeline.process_audio(
+                str(file_path),
+                save_outputs=True,
+                output_formats=['json', 'srt_original', 'srt_translated', 'text', 'summary']
+            )
+            
+            # Format results for demo display
+            formatted_results = self.format_demo_results(results, demo_id)
+            
+            # Save formatted results
+            with open(results_path, 'w', encoding='utf-8') as f:
+                json.dump(formatted_results, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"Demo file processed and cached: {config['filename']}")
+            
+        except Exception as e:
+            logger.error(f"Failed to process demo file {demo_id}: {e}")
+            # Create fallback results if processing fails
+            fallback_results = self.create_fallback_results(demo_id, str(e))
+            with open(results_path, 'w', encoding='utf-8') as f:
+                json.dump(fallback_results, f, indent=2, ensure_ascii=False)
+    
+    def format_demo_results(self, results: Dict, demo_id: str) -> Dict:
+        """Format pipeline results for demo display."""
+        formatted_results = {
+            "segments": [],
+            "summary": {
+                "total_duration": 0,
+                "num_speakers": 0,
+                "num_segments": 0,
+                "languages": [],
+                "processing_time": 0
+            }
+        }
         
-        # Create realistic demo results based on the actual content
-        if demo_id == "yuri_kizaki":
-            segments = [
-                {
-                    "speaker": "Speaker 1",
-                    "start_time": 0.0,
-                    "end_time": 8.5,
-                    "text": "音声メッセージが既存のウェブサイトを超えたコミュニケーションを実現。目で見るだけだったウェブサイトに音声情報をインクルードすることで、",
-                    "translated_text": "Audio messages enable communication beyond existing websites. By incorporating audio information into visually-driven websites,",
-                    "language": "ja",
-                    "confidence": 0.94
-                },
-                {
-                    "speaker": "Speaker 1",
-                    "start_time": 8.5,
-                    "end_time": 16.2,
-                    "text": "情報に新しい価値を与え、他者との差別化に効果を発揮します。また、文字やグラフィックだけでは伝えることの難しかった感情やニュアンスを表現し、",
-                    "translated_text": "you can add new value to the information and effectively differentiate from others. They also express emotions and nuances that are difficult to convey with text and graphics alone,",
-                    "language": "ja",
-                    "confidence": 0.96
-                },
-                {
-                    "speaker": "Speaker 1",
-                    "start_time": 16.2,
-                    "end_time": 22.8,
-                    "text": "ユーザーの興味と理解を深めます。見る、聞く、理解するウェブサイトへ。音声メッセージが人の心を動かします。",
-                    "translated_text": "deepening user interest and understanding. Turn your website into a place of sight, hearing, and understanding. Audio messages move people's hearts.",
-                    "language": "ja",
-                    "confidence": 0.95
-                }
-            ]
-            duration = 22.8
-        
-        elif demo_id == "film_podcast":
-            segments = [
+        try:
+            # Extract segments from actual pipeline results
+            if 'processed_segments' in results:
+                for seg in results['processed_segments']:
+                    formatted_results["segments"].append({
+                        "speaker": seg.speaker_id if hasattr(seg, 'speaker_id') else "Speaker 1",
+                        "start_time": seg.start_time if hasattr(seg, 'start_time') else 0,
+                        "end_time": seg.end_time if hasattr(seg, 'end_time') else 0,
+                        "text": seg.original_text if hasattr(seg, 'original_text') else "",
+                        "translated_text": seg.translated_text if hasattr(seg, 'translated_text') else "",
+                        "language": seg.original_language if hasattr(seg, 'original_language') else "unknown"
+                    })
+            
+            # Extract metadata
+            if 'audio_metadata' in results:
+                metadata = results['audio_metadata']
+                formatted_results["summary"]["total_duration"] = metadata.get('duration_seconds', 0)
+            
+            if 'processing_stats' in results:
+                stats = results['processing_stats']
+                formatted_results["summary"]["processing_time"] = stats.get('total_time', 0)
+            
+            # Calculate derived stats
+            formatted_results["summary"]["num_segments"] = len(formatted_results["segments"])
+            speakers = set(seg["speaker"] for seg in formatted_results["segments"])
+            formatted_results["summary"]["num_speakers"] = len(speakers)
+            languages = set(seg["language"] for seg in formatted_results["segments"] if seg["language"] != 'unknown')
+            formatted_results["summary"]["languages"] = list(languages) if languages else ["unknown"]
+            
+        except Exception as e:
+            logger.error(f"Error formatting demo results: {e}")
+            # Return basic structure if formatting fails
+            formatted_results["segments"] = [
                 {
                     "speaker": "Speaker 1",
                     "start_time": 0.0,
                     "end_time": 5.0,
-                    "text": "Le film intitulé The Social Network traite de la création du site Facebook par Mark Zuckerberg",
-                    "translated_text": "The film The Social Network deals with the creation of Facebook by Mark Zuckerberg",
-                    "language": "fr",
-                    "confidence": 0.97
-                },
-                {
-                    "speaker": "Speaker 1",
-                    "start_time": 5.0,
-                    "end_time": 14.0,
-                    "text": "et des problèmes judiciaires que cela a comporté pour le créateur de ce site.",
-                    "translated_text": "and the legal problems this caused for the creator of this site.",
-                    "language": "fr",
-                    "confidence": 0.95
-                },
-                {
-                    "speaker": "Speaker 1",
-                    "start_time": 14.0,
-                    "end_time": 19.0,
-                    "text": "Ce film est très réaliste et très intéressant.",
-                    "translated_text": "This film is very realistic and very interesting.",
-                    "language": "fr",
-                    "confidence": 0.98
-                },
-                {
-                    "speaker": "Speaker 1",
-                    "start_time": 19.0,
-                    "end_time": 25.0,
-                    "text": "La semaine dernière, j'ai été au cinéma voir Paranormal Activity 2.",
-                    "translated_text": "Last week, I went to the cinema to see Paranormal Activity 2.",
-                    "language": "fr",
-                    "confidence": 0.96
+                    "text": f"Demo processing completed. Error in formatting: {str(e)}",
+                    "translated_text": f"Demo processing completed. Error in formatting: {str(e)}",
+                    "language": "en"
                 }
             ]
-            duration = 25.0
+            formatted_results["summary"]["total_duration"] = 5.0
+            formatted_results["summary"]["num_segments"] = 1
+            formatted_results["summary"]["num_speakers"] = 1
+            formatted_results["summary"]["languages"] = ["en"]
         
-        # Create comprehensive results
-        results = {
-            "segments": segments,
+        return formatted_results
+    
+    def create_fallback_results(self, demo_id: str, error_msg: str) -> Dict:
+        """Create fallback results when demo processing fails."""
+        config = DEMO_FILES[demo_id]
+        return {
+            "segments": [
+                {
+                    "speaker": "System",
+                    "start_time": 0.0,
+                    "end_time": 1.0,
+                    "text": f"Demo processing failed: {error_msg}",
+                    "translated_text": f"Demo processing failed: {error_msg}",
+                    "language": "en"
+                }
+            ],
             "summary": {
-                "total_duration": duration,
-                "num_speakers": len(set(seg["speaker"] for seg in segments)),
-                "num_segments": len(segments),
-                "languages": [segments[0]["language"]],
-                "processing_time": 0.5,
-                "file_path": str(file_path),
-                "demo_id": demo_id
-            },
-            "metadata": {
-                "original_filename": config["filename"],
-                "display_name": config["display_name"],
-                "language": config["language"],
-                "description": config["description"]
+                "total_duration": 1.0,
+                "num_speakers": 1,
+                "num_segments": 1,
+                "languages": ["en"],
+                "processing_time": 0.1
             }
         }
-        
-        # Save results
-        with open(results_path, 'w', encoding='utf-8') as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
-        
-        logger.info(f"Preprocessed demo file: {config['filename']}")
 
 # Initialize demo manager
 demo_manager = DemoManager()
@@ -456,6 +493,9 @@ async def startup_event():
         logger.info("Demo files initialization complete")
     except Exception as e:
         logger.error(f"Demo files initialization failed: {e}")
+    
+    # Set models loaded flag for health check
+    app.state.models_loaded = True
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -559,7 +599,6 @@ async def get_results(task_id: str):
                         "text": seg.original_text if hasattr(seg, 'original_text') else "",
                         "translated_text": seg.translated_text if hasattr(seg, 'translated_text') else "",
                         "language": seg.original_language if hasattr(seg, 'original_language') else "unknown",
-                        "confidence": seg.confidence_transcription if hasattr(seg, 'confidence_transcription') else 0.0
                     })
             
             # Extract summary information
@@ -589,7 +628,6 @@ async def get_results(task_id: str):
                         "end_time": 5.0,
                         "text": f"Processed audio from file. Full results processing encountered an error: {str(e)}",
                         "language": "en",
-                        "confidence": 0.8
                     }
                 ],
                 "summary": {
@@ -619,7 +657,6 @@ async def get_results(task_id: str):
                         "end_time": 1.0,
                         "text": "Audio processing completed but results are not available for display.",
                         "language": "en",
-                        "confidence": 1.0
                     }
                 ],
                 "summary": {
