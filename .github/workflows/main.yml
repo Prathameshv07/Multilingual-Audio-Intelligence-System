@@ -1,0 +1,21 @@
+name: Sync to Hugging Face hub
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Push to hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git push --force https://prathameshv07:$HF_TOKEN@huggingface.co/spaces/prathameshv07/Multilingual-Audio-Intelligence-System main
