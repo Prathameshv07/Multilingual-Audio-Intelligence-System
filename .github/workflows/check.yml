@@ -117,7 +117,7 @@ jobs:
           pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
       # Create and run upload script
-      - name: Upload to Google Drive (PR Preview)
+      - name: Upload to Google Drive
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: |
@@ -129,11 +129,15 @@ jobs:
           from googleapiclient.http import MediaFileUpload
           import mimetypes
 
+          # Load credentials from environment
           credentials_json = os.environ['GOOGLE_CREDENTIALS']
           credentials_info = json.loads(credentials_json)
           credentials = service_account.Credentials.from_service_account_info(credentials_info)
 
+          # Build the Drive service
           service = build('drive', 'v3', credentials=credentials)
+
+          # Target folder ID - IMPORTANT: This must be the shared folder ID
           FOLDER_ID = '1-8HJcWxsUUQIj9OMXQeoeULS06RA9Hg9'
 
           def get_mime_type(file_path):
@@ -141,8 +145,9 @@ jobs:
               return mime_type or 'application/octet-stream'
 
           def upload_file(file_path, parent_folder_id, drive_service):
-              file_name = f"PR_PREVIEW_{os.path.basename(file_path)}"
+              file_name = os.path.basename(file_path)
               
+              # Check if file already exists in the specific folder
               query = f"name='{file_name}' and '{parent_folder_id}' in parents and trashed=false"
               results = drive_service.files().list(q=query).execute()
               items = results.get('files', [])
@@ -150,23 +155,45 @@ jobs:
               media = MediaFileUpload(file_path, mimetype=get_mime_type(file_path), resumable=True)
               
               if items:
+                  # Update existing file
                   file_id = items[0]['id']
                   updated_file = drive_service.files().update(
                       fileId=file_id,
                       media_body=media
                   ).execute()
-                  print(f'Updated PR Preview: {file_name}')
+                  print(f'Updated: {file_name} (ID: {updated_file.get("id")})')
               else:
+                  # Create new file - CRITICAL: Must specify parent folder
                   file_metadata = {
                       'name': file_name,
-                      'parents': [parent_folder_id]
+                      'parents': [parent_folder_id]  # This line is crucial!
                   }
                   file = drive_service.files().create(
                       body=file_metadata,
                       media_body=media,
                       fields='id'
                   ).execute()
-                  print(f'Uploaded PR Preview: {file_name}')
+                  print(f'Uploaded: {file_name} (ID: {file.get("id")})')
+
+          def create_folder_if_not_exists(folder_name, parent_folder_id, drive_service):
+              """Create a folder if it doesn't exist and return its ID"""
+              # Check if folder already exists
+              query = f"name='{folder_name}' and '{parent_folder_id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
+              results = drive_service.files().list(q=query).execute()
+              items = results.get('files', [])
+              
+              if items:
+                  return items[0]['id']
+              else:
+                  # Create new folder
+                  folder_metadata = {
+                      'name': folder_name,
+                      'parents': [parent_folder_id],
+                      'mimeType': 'application/vnd.google-apps.folder'
+                  }
+                  folder = drive_service.files().create(body=folder_metadata, fields='id').execute()
+                  print(f'Created folder: {folder_name} (ID: {folder.get("id")})')
+                  return folder.get('id')
 
           def upload_directory(local_path, parent_folder_id, drive_service, exclude_dirs=None, exclude_files=None):
               if exclude_dirs is None:
@@ -177,8 +204,20 @@ jobs:
               import fnmatch
               
               for root, dirs, files in os.walk(local_path):
+                  # Remove excluded directories
                   dirs[:] = [d for d in dirs if d not in exclude_dirs]
                   
+                  # Calculate relative path from the root
+                  rel_path = os.path.relpath(root, local_path)
+                  current_folder_id = parent_folder_id
+                  
+                  # Create nested folders if needed
+                  if rel_path != '.':
+                      path_parts = rel_path.split(os.sep)
+                      for part in path_parts:
+                          current_folder_id = create_folder_if_not_exists(part, current_folder_id, drive_service)
+                  
+                  # Upload files in current directory
                   for file in files:
                       # Skip excluded file patterns (like *.md)
                       should_skip = False
@@ -190,17 +229,29 @@ jobs:
                       if should_skip:
                           print(f'Skipping {file} (excluded file type)')
                           continue
-                      
+                          
                       file_path = os.path.join(root, file)
                       try:
-                          upload_file(file_path, parent_folder_id, drive_service)
+                          upload_file(file_path, current_folder_id, drive_service)
                       except Exception as e:
                           print(f'Error uploading {file_path}: {e}')
 
-          print("Starting PR preview upload to Google Drive...")
+          # Test folder permissions first
+          try:
+              # Try to list files in the target folder to verify access
+              test_query = f"'{FOLDER_ID}' in parents and trashed=false"
+              test_results = service.files().list(q=test_query, pageSize=1).execute()
+              print(f"Successfully accessed folder. Found {len(test_results.get('files', []))} items (showing 1 max)")
+          except Exception as e:
+              print(f"ERROR: Cannot access folder {FOLDER_ID}. Make sure the service account has Editor access to this folder.")
+              print(f"Service account email should be in the folder sharing settings.")
+              exit(1)
+
+          # Upload all files to Google Drive (excluding MD files)
+          print("Starting upload to Google Drive...")
           upload_directory('.', FOLDER_ID, service)
 
-          print("PR preview upload completed - MD files were skipped, PDFs were uploaded!")
+          print("Upload completed - MD files were skipped, PDFs were uploaded!")
           EOF
           
           python upload_to_drive.py

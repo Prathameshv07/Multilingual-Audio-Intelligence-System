@@ -105,8 +105,10 @@ jobs:
         run: |
           pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
-      # Create Google Drive upload script
-      - name: Create upload script
+      # Create and run upload script
+      - name: Upload to Google Drive
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: |
           cat > upload_to_drive.py << 'EOF'
           import os
@@ -240,12 +242,8 @@ jobs:
 
           print("Upload completed - MD files were skipped, PDFs were uploaded!")
           EOF
-
-      # Upload to Google Drive
-      - name: Upload to Google Drive
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: python upload_to_drive.py
+          
+          python upload_to_drive.py
 
       # Push to Hugging Face (original functionality)
       - name: Push to Hugging Face hub
