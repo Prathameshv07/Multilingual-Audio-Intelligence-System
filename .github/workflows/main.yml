@@ -35,65 +35,425 @@ jobs:
           # Install weasyprint as fallback
           pip install weasyprint
 
-      # Convert MD files to PDF
-      - name: Convert MD to PDF
-        run: |
-          find . -name "*.md" -not -path "./.git/*" | while read file; do
-            # Get the directory and filename
-            dir="$(dirname "$file")"
-            filename="$(basename "$file" .md)"
-            pdf_path="$dir/$filename.pdf"
-            
-            echo "Converting $file to $pdf_path"
-            
-            # Convert MD to PDF with proper Unicode support and image handling
-            pandoc "$file" \
-              -o "$pdf_path" \
-              --pdf-engine=xelatex \
-              --variable mainfont="DejaVu Sans" \
-              --variable sansfont="DejaVu Sans" \
-              --variable monofont="DejaVu Sans Mono" \
-              --include-in-header=<(echo '\usepackage{graphicx}') \
-              --include-in-header=<(echo '\usepackage{float}') \
-              --include-in-header=<(echo '\floatplacement{figure}{H}') \
-              --resource-path="$dir" \
-              --standalone \
-              --toc \
-              --number-sections \
-              --highlight-style=github \
-              -V geometry:margin=1in \
-              -V colorlinks=true \
-              -V linkcolor=blue \
-              -V urlcolor=blue \
-              -V toccolor=gray \
-              --wrap=auto \
-              --dpi=300 \
-              --verbose || {
-                echo "Error converting $file with xelatex, trying with weasyprint..."
-                # Fallback to HTML->PDF conversion for complex documents
-                pandoc "$file" \
-                  -t html5 \
-                  --standalone \
-                  --self-contained \
-                  --css=<(echo 'body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;line-height:1.6}img{max-width:100%;height:auto}pre{background:#f5f5f5;padding:10px;border-radius:5px;overflow-x:auto}') \
-                  -o "$dir/$filename.html"
-                
-                # Install weasyprint for HTML to PDF conversion
-                pip install weasyprint
-                weasyprint "$dir/$filename.html" "$pdf_path" || {
-                  echo "Both conversions failed for $file, skipping..."
-                  continue
-                }
-                rm -f "$dir/$filename.html"
-              }
-            
-            if [ -f "$pdf_path" ]; then
-              echo "Successfully converted $file to $pdf_path"
-            else
-              echo "Failed to convert $file"
-            fi
-          done
+      # Improved MD to PDF Conversion with proper image handling and mermaid support
+      name: Convert Markdown to PDF
 
+      on:
+        push:
+          branches: [ main ]
+        pull_request:
+          branches: [ main ]
+
+      jobs:
+        convert-to-pdf:
+          runs-on: ubuntu-latest
+          
+          steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              
+            - name: Setup Python
+              uses: actions/setup-python@v4
+              with:
+                python-version: '3.11'
+                
+            - name: Install system dependencies
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y \
+                  texlive-full \
+                  texlive-xetex \
+                  texlive-luatex \
+                  pandoc \
+                  librsvg2-bin \
+                  python3-pip \
+                  nodejs \
+                  npm \
+                  imagemagick \
+                  ghostscript \
+                  wkhtmltopdf
+                  
+            - name: Install Node.js dependencies for Mermaid
+              run: |
+                npm install -g @mermaid-js/mermaid-cli
+                npm install -g puppeteer
+                
+            - name: Install Python dependencies
+              run: |
+                pip install --upgrade pip
+                pip install \
+                  weasyprint \
+                  markdown \
+                  pymdown-extensions \
+                  pillow \
+                  cairosvg \
+                  pdfkit
+                  
+            - name: Create LaTeX header for better image handling
+              run: |
+                cat > latex-header.tex << 'EOF'
+                \usepackage{graphicx}
+                \usepackage{float}
+                \usepackage{adjustbox}
+                \usepackage{caption}
+                \usepackage{subcaption}
+                \usepackage{geometry}
+                \usepackage{fancyhdr}
+                \usepackage{xcolor}
+                \usepackage{hyperref}
+                
+                % Better image positioning and scaling
+                \floatplacement{figure}{H}
+                \renewcommand{\includegraphics}[2][]{\adjustbox{max width=\textwidth,center}{\oldincludegraphics[#1]{#2}}}
+                \let\oldincludegraphics\includegraphics
+                
+                % Set margins
+                \geometry{margin=1in}
+                
+                % Hyperlink colors
+                \hypersetup{
+                    colorlinks=true,
+                    linkcolor=blue,
+                    urlcolor=blue,
+                    citecolor=blue
+                }
+                EOF
+                
+            - name: Create enhanced CSS for HTML conversion
+              run: |
+                cat > styles.css << 'EOF'
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    max-width: 210mm;
+                    margin: 0 auto;
+                    padding: 20mm;
+                    line-height: 1.6;
+                    color: #333;
+                    background: white;
+                }
+                
+                img {
+                    max-width: 100%;
+                    height: auto;
+                    display: block;
+                    margin: 1em auto;
+                    border-radius: 4px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }
+                
+                pre {
+                    background: #f8f9fa;
+                    padding: 1em;
+                    border-radius: 6px;
+                    border-left: 4px solid #007acc;
+                    overflow-x: auto;
+                    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                    font-size: 0.9em;
+                }
+                
+                code {
+                    background: #f1f3f4;
+                    padding: 0.2em 0.4em;
+                    border-radius: 3px;
+                    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                    font-size: 0.9em;
+                }
+                
+                h1, h2, h3, h4, h5, h6 {
+                    color: #2c3e50;
+                    margin-top: 2em;
+                    margin-bottom: 1em;
+                    page-break-after: avoid;
+                }
+                
+                h1 {
+                    border-bottom: 3px solid #3498db;
+                    padding-bottom: 0.5em;
+                }
+                
+                h2 {
+                    border-bottom: 2px solid #95a5a6;
+                    padding-bottom: 0.3em;
+                }
+                
+                table {
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin: 1em 0;
+                }
+                
+                th, td {
+                    border: 1px solid #ddd;
+                    padding: 0.75em;
+                    text-align: left;
+                }
+                
+                th {
+                    background-color: #f8f9fa;
+                    font-weight: bold;
+                }
+                
+                blockquote {
+                    border-left: 4px solid #3498db;
+                    margin: 1em 0;
+                    padding: 0.5em 1em;
+                    background: #f8f9fa;
+                    border-radius: 0 4px 4px 0;
+                }
+                
+                .mermaid-container {
+                    text-align: center;
+                    margin: 2em 0;
+                    page-break-inside: avoid;
+                }
+                
+                .mermaid-container img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                
+                @media print {
+                    body {
+                        margin: 0;
+                        padding: 15mm;
+                    }
+                    
+                    img {
+                        max-height: 80vh;
+                        page-break-inside: avoid;
+                    }
+                    
+                    h1, h2, h3, h4, h5, h6 {
+                        page-break-after: avoid;
+                    }
+                    
+                    pre, blockquote {
+                        page-break-inside: avoid;
+                    }
+                }
+                EOF
+                
+            - name: Create preprocessing script
+              run: |
+                cat > preprocess_markdown.py << 'EOF'
+                #!/usr/bin/env python3
+                import re
+                import os
+                import sys
+                import subprocess
+                from pathlib import Path
+                
+                def process_mermaid_diagrams(content, file_dir):
+                    """Convert mermaid diagrams to images"""
+                    mermaid_pattern = r'```mermaid\n(.*?)\n```'
+                    
+                    def replace_mermaid(match):
+                        mermaid_code = match.group(1)
+                        # Create a unique filename for this diagram
+                        diagram_hash = str(abs(hash(mermaid_code)))
+                        mermaid_file = f"{file_dir}/mermaid_{diagram_hash}.mmd"
+                        svg_file = f"{file_dir}/mermaid_{diagram_hash}.svg"
+                        png_file = f"{file_dir}/mermaid_{diagram_hash}.png"
+                        
+                        # Write mermaid code to file
+                        with open(mermaid_file, 'w') as f:
+                            f.write(mermaid_code)
+                        
+                        try:
+                            # Convert to SVG first
+                            subprocess.run([
+                                'mmdc', '-i', mermaid_file, '-o', svg_file,
+                                '--theme', 'default', '--backgroundColor', 'white'
+                            ], check=True, capture_output=True)
+                            
+                            # Convert SVG to PNG for better PDF compatibility
+                            subprocess.run([
+                                'rsvg-convert', '-f', 'png', '-o', png_file,
+                                '--width', '1200', '--height', '800', svg_file
+                            ], check=True, capture_output=True)
+                            
+                            # Clean up intermediate files
+                            os.remove(mermaid_file)
+                            if os.path.exists(svg_file):
+                                os.remove(svg_file)
+                            
+                            # Return markdown image syntax
+                            return f'\n<div class="mermaid-container">\n\n![Architecture Diagram]({os.path.basename(png_file)})\n\n</div>\n'
+                            
+                        except subprocess.CalledProcessError as e:
+                            print(f"Error converting mermaid diagram: {e}")
+                            return f'\n```\n{mermaid_code}\n```\n'
+                        except Exception as e:
+                            print(f"Unexpected error with mermaid: {e}")
+                            return f'\n```\n{mermaid_code}\n```\n'
+                    
+                    return re.sub(mermaid_pattern, replace_mermaid, content, flags=re.DOTALL)
+                
+                def fix_image_paths(content, file_dir):
+                    """Fix image paths and add proper sizing"""
+                    # Pattern to match markdown images
+                    img_pattern = r'!\[([^\]]*)\]\(([^)]+)\)'
+                    
+                    def replace_image(match):
+                        alt_text = match.group(1)
+                        img_path = match.group(2)
+                        
+                        # Handle relative paths
+                        if not img_path.startswith(('http://', 'https://', '/')):
+                            # Make path relative to the markdown file
+                            abs_img_path = os.path.join(file_dir, img_path)
+                            if os.path.exists(abs_img_path):
+                                img_path = os.path.relpath(abs_img_path, file_dir)
+                        
+                        # Add HTML img tag with better control
+                        return f'<img src="{img_path}" alt="{alt_text}" style="max-width: 100%; height: auto; display: block; margin: 1em auto;" />'
+                    
+                    # Also handle HTML img tags and ensure they have proper styling
+                    content = re.sub(img_pattern, replace_image, content)
+                    
+                    # Fix existing HTML img tags
+                    content = re.sub(
+                        r'<img\s+([^>]*?)\s*/?>',
+                        lambda m: f'<img {m.group(1)} style="max-width: 100%; height: auto; display: block; margin: 1em auto;" />',
+                        content
+                    )
+                    
+                    return content
+                
+                def main():
+                    if len(sys.argv) != 2:
+                        print("Usage: python preprocess_markdown.py <markdown_file>")
+                        sys.exit(1)
+                    
+                    md_file = sys.argv[1]
+                    file_dir = os.path.dirname(os.path.abspath(md_file))
+                    
+                    with open(md_file, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    
+                    # Process mermaid diagrams
+                    content = process_mermaid_diagrams(content, file_dir)
+                    
+                    # Fix image paths and sizing
+                    content = fix_image_paths(content, file_dir)
+                    
+                    # Write processed content
+                    processed_file = md_file.replace('.md', '_processed.md')
+                    with open(processed_file, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    
+                    print(f"Processed file saved as: {processed_file}")
+                    return processed_file
+                
+                if __name__ == "__main__":
+                    main()
+                EOF
+                
+                chmod +x preprocess_markdown.py
+                
+            - name: Convert MD to PDF with enhanced processing
+              run: |
+                find . -name "*.md" -not -path "./.git/*" | while read file; do
+                  # Get the directory and filename
+                  dir="$(dirname "$file")"
+                  filename="$(basename "$file" .md)"
+                  pdf_path="$dir/$filename.pdf"
+                  
+                  echo "Processing $file..."
+                  
+                  # Preprocess the markdown file
+                  cd "$dir"
+                  processed_file=$(python3 "$GITHUB_WORKSPACE/preprocess_markdown.py" "$(basename "$file")")
+                  
+                  if [ ! -f "$processed_file" ]; then
+                    echo "Preprocessing failed for $file, using original"
+                    processed_file="$(basename "$file")"
+                  fi
+                  
+                  echo "Converting $processed_file to $pdf_path"
+                  
+                  # Method 1: Try XeLaTeX with enhanced settings
+                  pandoc "$processed_file" \
+                    -o "$pdf_path" \
+                    --pdf-engine=xelatex \
+                    --include-in-header="$GITHUB_WORKSPACE/latex-header.tex" \
+                    --variable mainfont="DejaVu Sans" \
+                    --variable sansfont="DejaVu Sans" \
+                    --variable monofont="DejaVu Sans Mono" \
+                    --variable geometry:margin=1in \
+                    --variable colorlinks=true \
+                    --variable linkcolor=blue \
+                    --variable urlcolor=blue \
+                    --variable toccolor=gray \
+                    --resource-path="$dir:$GITHUB_WORKSPACE" \
+                    --standalone \
+                    --toc \
+                    --number-sections \
+                    --highlight-style=github \
+                    --wrap=auto \
+                    --dpi=300 \
+                    --verbose 2>/dev/null || {
+                    
+                    echo "XeLaTeX failed, trying HTML->PDF conversion..."
+                    
+                    # Method 2: HTML to PDF conversion with WeasyPrint
+                    pandoc "$processed_file" \
+                      -t html5 \
+                      --standalone \
+                      --embed-resources \
+                      --css="$GITHUB_WORKSPACE/styles.css" \
+                      --toc \
+                      --number-sections \
+                      --highlight-style=github \
+                      -o "$dir/$filename.html"
+                    
+                    if [ -f "$dir/$filename.html" ]; then
+                      weasyprint "$dir/$filename.html" "$pdf_path" --presentational-hints || {
+                        echo "WeasyPrint failed, trying wkhtmltopdf..."
+                        
+                        # Method 3: wkhtmltopdf as final fallback
+                        wkhtmltopdf \
+                          --page-size A4 \
+                          --margin-top 0.75in \
+                          --margin-right 0.75in \
+                          --margin-bottom 0.75in \
+                          --margin-left 0.75in \
+                          --encoding UTF-8 \
+                          --no-outline \
+                          --enable-local-file-access \
+                          "$dir/$filename.html" "$pdf_path" || {
+                          echo "All conversion methods failed for $file"
+                          continue
+                        }
+                      }
+                      
+                      # Clean up HTML file
+                      rm -f "$dir/$filename.html"
+                    fi
+                  }
+                  
+                  # Clean up processed file
+                  if [ "$processed_file" != "$(basename "$file")" ]; then
+                    rm -f "$processed_file"
+                  fi
+                  
+                  # Clean up generated mermaid images
+                  rm -f mermaid_*.png mermaid_*.svg mermaid_*.mmd
+                  
+                  if [ -f "$pdf_path" ]; then
+                    echo "✅ Successfully converted $file to $pdf_path"
+                  else
+                    echo "❌ Failed to convert $file"
+                  fi
+                done
+                
+            - name: Upload PDF artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                name: converted-pdfs
+                path: "**/*.pdf"
+                retention-days: 30
+      
       # Set up Python for Google Drive upload
       - name: Set up Python
         uses: actions/setup-python@v4
