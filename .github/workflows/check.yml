@@ -119,7 +119,7 @@ jobs:
       # Create and run upload script
       - name: Upload to Google Drive
         env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_OAUTH_TOKEN: ${{ secrets.GOOGLE_OAUTH_TOKEN }}
         run: |
           cat > upload_to_drive.py << 'EOF'
           import os
