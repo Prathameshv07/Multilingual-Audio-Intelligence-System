@@ -329,6 +329,11 @@ jobs:
           
           chmod +x preprocess_markdown.py
 
+      # Download GitHub highlight theme
+      - name: Download GitHub highlight theme
+        run: |
+          wget https://raw.githubusercontent.com/jgm/pandoc/master/data/highlight/github.theme -O github.theme
+
       # Convert MD to PDF with enhanced processing
       - name: Convert MD to PDF with enhanced processing
         run: |
@@ -368,7 +373,7 @@ jobs:
               --standalone \
               --toc \
               --number-sections \
-              --highlight-style=github \
+              --highlight-style=github.theme \
               --wrap=auto \
               --dpi=300 \
               --verbose 2>/dev/null || {
@@ -383,7 +388,7 @@ jobs:
                 --css="$GITHUB_WORKSPACE/styles.css" \
                 --toc \
                 --number-sections \
-                --highlight-style=github \
+                --highlight-style=github.theme \
                 -o "$dir/$filename.html"
               
               if [ -f "$dir/$filename.html" ]; then
