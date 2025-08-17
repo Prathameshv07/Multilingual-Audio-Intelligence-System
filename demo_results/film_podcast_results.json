@@ -1,0 +1,381 @@
+{
+  "segments": [
+    {
+      "speaker": "SPEAKER_01",
+      "start_time": 6.308468750000001,
+      "end_time": 13.46346875,
+      "text": "Le film intitulé « The Social Network » traite de la création du site Facebook par Marc Zuckerberg.",
+      "translated_text": "The film entitled \"The Social Network\" deals with the creation of the Facebook site by Marc Zuckerberg.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start_time": 13.98659375,
+      "end_time": 18.47534375,
+      "text": "et des problèmes judiciaires que cela a comporté pour le créateur de ceci.",
+      "translated_text": "and the judicial problems that this involved for the creator of this.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start_time": 19.09971875,
+      "end_time": 21.49596875,
+      "text": "Ce film est très réaliste et très intéressant.",
+      "translated_text": "This film is very realistic and very interesting.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_04",
+      "start_time": 25.74846875,
+      "end_time": 30.405968750000003,
+      "text": "La semaine dernière, j'ai été au cinéma voir Paranormal Activity 2.",
+      "translated_text": "Last week, I went to the movies to see Paranormal Activity 2.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_04",
+      "start_time": 31.08096875,
+      "end_time": 33.35909375,
+      "text": "Ce film est un film d'horreur.",
+      "translated_text": "This movie is a horror movie.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_04",
+      "start_time": 34.28721875,
+      "end_time": 42.032843750000005,
+      "text": "Même s'il s'agit du deuxième film, il se déroule avant le premier et nous importe des informations sur celui-ci.",
+      "translated_text": "Even if it is the second film, it takes place before the first one and imports information about it.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 46.43721875,
+      "end_time": 48.86721875,
+      "text": "Récemment, j'ai vu le film V-Battery",
+      "translated_text": "Recently, I saw the movie V-Battery",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 49.15409375,
+      "end_time": 50.63909375,
+      "text": "qui raconte l'histoire des 4 Rébouins.",
+      "translated_text": "which tells the story of the 4 Rebouins.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 51.212843750000005,
+      "end_time": 52.39409375,
+      "text": "Part pour les égages.",
+      "translated_text": "Get out of here for the lights.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 53.05221875,
+      "end_time": 55.07721875,
+      "text": "pour intérer la vie de garçon de l'un d'autre.",
+      "translated_text": "to interest each other's boy's life.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 56.12346875,
+      "end_time": 57.439718750000004,
+      "text": "qui va se marier prochainement.",
+      "translated_text": "who's about to get married.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 58.65471875,
+      "end_time": 60.84846875,
+      "text": "Histoire se déroule donc à Las Vegas.",
+      "translated_text": "History takes place in Las Vegas.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 60.899093750000006,
+      "end_time": 62.299718750000004,
+      "text": "Et après une folle nuit.",
+      "translated_text": "And after a crazy night.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 62.721593750000004,
+      "end_time": 65.23596875,
+      "text": "Il se réveille au petit matin sans se souvenir de l'aveil.",
+      "translated_text": "He wakes up in the early morning without remembering the confession.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 67.58159375000001,
+      "end_time": 70.43346875,
+      "text": "Le problème est qu'ils ont perdu leur...",
+      "translated_text": "The problem is, they lost their...",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 70.68659375,
+      "end_time": 72.44159375000001,
+      "text": "Leur ami qui doit se marier prochainement.",
+      "translated_text": "Their friend who's due to get married soon.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 73.25159375,
+      "end_time": 75.24284375,
+      "text": "Je vous laisse donc imaginer la suite.",
+      "translated_text": "So I'll let you imagine the next one.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 76.08659375,
+      "end_time": 76.64346875000001,
+      "text": "qui est...",
+      "translated_text": "Which is...",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 76.89659375000001,
+      "end_time": 78.41534375,
+      "text": "pour ma part très amusante.",
+      "translated_text": "For my part, very amusing.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 79.39409375000001,
+      "end_time": 81.01409375,
+      "text": "Ce n'est pas le film que je préfère.",
+      "translated_text": "It's not the movie I like best.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_03",
+      "start_time": 81.45284375,
+      "end_time": 82.92096875,
+      "text": "Mais c'est un moment agréable.",
+      "translated_text": "But it's a nice time.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 87.52784375,
+      "end_time": 94.93596875,
+      "text": "Dernièrement, j'ai vu un film qui s'appelle Paranormal Activity 2.",
+      "translated_text": "Recently, I saw a movie called Paranormal Activity 2.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 95.25659375000001,
+      "end_time": 97.04534375,
+      "text": "Il s'agit d'un film d'horreur qui est accessible aux jeunes publics.",
+      "translated_text": "It is a horror film that is accessible to young audiences.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 97.80471875,
+      "end_time": 106.81596875000001,
+      "text": "Gros ne trouve pas de scène choquante.",
+      "translated_text": "Fat doesn't find a shocking scene.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 107.59221875,
+      "end_time": 115.96221875,
+      "text": "Il s'agit de l'histoire d'une famille américaine qui vit près de l'eau sans pacifique sur la côte ouest",
+      "translated_text": "This is the story of an American family living near the unpeaceful water on the west coast.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 116.72159375000001,
+      "end_time": 122.84721875000001,
+      "text": "et qui se trouve en proie à des phénomènes paranormaux.",
+      "translated_text": "and is plagued by paranormal phenomena.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_07",
+      "start_time": 127.62284375,
+      "end_time": 128.95596875,
+      "text": "Peu à peu, tous les membres de cette famille vont disparaître mystérieusement, les uns après les autres, sans que l'on y trouve de véritables explications.",
+      "translated_text": "Gradually, all the members of this family will disappear mysteriously, one after another, without any real explanation.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_07",
+      "start_time": 129.14159375,
+      "end_time": 130.71096875,
+      "text": "Il s'agit d'un bon film, rythmé et agréable à suivre, devant lequel on ne s'ennuie pas une seule seconde.",
+      "translated_text": "It is a good film, rhythmic and pleasant to follow, before which one does not miss one second.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_07",
+      "start_time": 131.40284375000002,
+      "end_time": 135.79034375,
+      "text": "La semaine dernière",
+      "translated_text": "Last week",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_07",
+      "start_time": 136.39784375000002,
+      "end_time": 139.14846875,
+      "text": "J'ai vu le film La Ravre.",
+      "translated_text": "I saw the movie La Ravre.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start_time": 143.48534375,
+      "end_time": 145.47659375,
+      "text": "il parle de la 2e guerre mondiale et de la vie des Juifs en France.",
+      "translated_text": "He talks about the Second World War and the life of the Jews in France.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start_time": 145.71284375000002,
+      "end_time": 147.04596875000001,
+      "text": "Ce film est très intéressant et très réaliste.",
+      "translated_text": "This film is very interesting and very realistic.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start_time": 147.21471875,
+      "end_time": 148.91909375,
+      "text": "Récemment, j'ai vu Inception.",
+      "translated_text": "Recently, I saw Inception.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start_time": 149.20596875,
+      "end_time": 153.76221875000002,
+      "text": "Ce film est intéressant.",
+      "translated_text": "This movie is interesting.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start_time": 154.52159375000002,
+      "end_time": 155.88846875000002,
+      "text": "pour ces graphismes et ce qu'on scénario.",
+      "translated_text": "for these graphics and what we're scenarioing.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_02",
+      "start_time": 156.58034375,
+      "end_time": 158.38596875000002,
+      "text": "L'idée de directrice est tendance d'entrer dans les rêves d'une personne pour y implanter une idée.",
+      "translated_text": "The idea of a director tends to enter a person's dreams to implant an idea.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_05",
+      "start_time": 162.73971875,
+      "end_time": 166.85721875000002,
+      "text": "Les acteurs sont très bons.",
+      "translated_text": "The actors are very good.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_05",
+      "start_time": 167.49846875,
+      "end_time": 177.04971875,
+      "text": "Et le film regarde les bannes hittées.",
+      "translated_text": "And the movie looks at the hit banners.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_06",
+      "start_time": 181.31909375,
+      "end_time": 184.94721875000002,
+      "text": "La semaine dernière, je suis allée au cinéma pour voir paranormal activité.",
+      "translated_text": "Last week, I went to the movies to see paranormal activity.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_06",
+      "start_time": 185.50409375,
+      "end_time": 191.19096875000002,
+      "text": "Ce film d'horreur apportait me le paranormal.",
+      "translated_text": "This horror movie brought me the paranormal.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_06",
+      "start_time": 191.88284375,
+      "end_time": 198.12659375,
+      "text": "En effet, une famille subit des phénomènes paranormaux.",
+      "translated_text": "Indeed, a family undergoes paranormal phenomena.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_08",
+      "start_time": 202.81784375,
+      "end_time": 205.07909375000003,
+      "text": "Tout au long du film, l'angoisse et le suspect, Reign.",
+      "translated_text": "Throughout the movie, anxiety and the suspect, Reign.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_08",
+      "start_time": 205.31534375,
+      "end_time": 207.27284375000002,
+      "text": "Le dernier film que j'ai vu au cinéma était Wall Street.",
+      "translated_text": "The last movie I saw in the movies was Wall Street.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_08",
+      "start_time": 208.23471875,
+      "end_time": 211.66034375,
+      "text": "J'ai trouvé ce film très intéressant car il parlait de l'univers financier pendant la crise.",
+      "translated_text": "I found this film very interesting because it was about the financial universe during the crisis.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_08",
+      "start_time": 212.53784375,
+      "end_time": 214.07346875000002,
+      "text": "Il y avait aussi une histoire de famille qui rajoutait de la romance dans ce film qui décrit un monde très masculin.",
+      "translated_text": "There was also a family story that added romance in this film that describes a very masculine world.",
+      "language": "fr"
+    },
+    {
+      "speaker": "SPEAKER_08",
+      "start_time": 214.27596875,
+      "end_time": 215.40659375,
+      "text": "La semaine dernière, je suis allée au cinéma.",
+      "translated_text": "Last week, I went to the movies.",
+      "language": "fr"
+    }
+  ],
+  "summary": {
+    "total_duration": 230.478,
+    "num_speakers": 9,
+    "num_segments": 46,
+    "languages": [
+      "fr"
+    ],
+    "processing_time": 401.4734380245209
+  }
+}

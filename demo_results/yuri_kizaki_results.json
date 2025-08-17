@@ -1,0 +1,109 @@
+{
+  "segments": [
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 0.40221875,
+      "end_time": 4.77284375,
+      "text": "音声メッセージが既存のウェブサイトを超えたコミュニケーションを実現。",
+      "translated_text": "The audio message will bring out communication beyond the existing website.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 5.5153437499999995,
+      "end_time": 7.388468750000001,
+      "text": "目で見るだけだったウェブサイトに",
+      "translated_text": "I'm going to show you what I'm doing.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 7.624718750000001,
+      "end_time": 9.852218750000002,
+      "text": "音声情報をインクルードすることで",
+      "translated_text": "We're going to be able to do that in the next video.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 10.274093750000002,
+      "end_time": 12.31596875,
+      "text": "情報に新しい価値を与え",
+      "translated_text": "And that's what we're going to do.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 12.36659375,
+      "end_time": 14.72909375,
+      "text": "他者との差別化に効果を発揮します",
+      "translated_text": "It's not just about being different from other people.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 15.67409375,
+      "end_time": 16.06221875,
+      "text": "また!",
+      "translated_text": "Again!",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 16.33221875,
+      "end_time": 21.58034375,
+      "text": "文字やグラフィックだけでは伝えることの難しかった感情やニュアンスを表現し",
+      "translated_text": "It's not just writing, it's graphic.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 22.06971875,
+      "end_time": 24.44909375,
+      "text": "ユーザーの興味と理解を深めます。",
+      "translated_text": "It will enhance the user's interest and understanding.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 25.47846875,
+      "end_time": 25.832843750000002,
+      "text": "見る",
+      "translated_text": "See.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 26.204093750000002,
+      "end_time": 26.65971875,
+      "text": "聞く",
+      "translated_text": "Listen.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 26.96346875,
+      "end_time": 28.617218750000003,
+      "text": "理解するウェブサイトへ",
+      "translated_text": "To a website that understands.",
+      "language": "ja"
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start_time": 29.24159375,
+      "end_time": 31.90784375,
+      "text": "音声メッセージが人の心を動かします",
+      "translated_text": "And that's what I'm talking about.",
+      "language": "ja"
+    }
+  ],
+  "summary": {
+    "total_duration": 32.366,
+    "num_speakers": 1,
+    "num_segments": 12,
+    "languages": [
+      "ja"
+    ],
+    "processing_time": 88.7896044254303
+  }
+}

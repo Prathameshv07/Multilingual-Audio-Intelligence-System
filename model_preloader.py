@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-Model Preloader for Multilingual Audio Intelligence System
+Model Preloader for Multilingual Audio Intelligence System - Enhanced Version
 
-This module handles downloading and initializing all AI models before the application starts.
-It provides progress tracking, caching, and error handling for model loading.
-
-Models loaded:
-- pyannote.audio for speaker diarization
-- faster-whisper for speech recognition
-- mBART50 for neural machine translation
+Key improvements:
+1. Smart local cache detection with corruption checking
+2. Fallback to download if local files don't exist or are corrupted  
+3. Better error handling and retry mechanisms
+4. Consistent approach across all model types
 """
 
 import os
@@ -41,7 +39,7 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 class ModelPreloader:
-    """Comprehensive model preloader with progress tracking and caching."""
+    """Comprehensive model preloader with enhanced local cache detection."""
     
     def __init__(self, cache_dir: str = "./model_cache", device: str = "auto"):
         self.cache_dir = Path(cache_dir)
@@ -96,6 +94,154 @@ class ModelPreloader:
             }
         }
     
+    def check_local_model_files(self, model_name: str, model_type: str) -> bool:
+        """
+        Check if model files exist locally and are not corrupted.
+        Returns True if valid local files exist, False otherwise.
+        """
+        try:
+            if model_type == "whisper":
+                # For Whisper, check the Systran faster-whisper cache
+                whisper_cache = self.cache_dir / "whisper" / "models--Systran--faster-whisper-small"
+                required_files = ["config.json", "model.bin", "tokenizer.json", "vocabulary.txt"]
+                
+                # Find the snapshot directory
+                snapshots_dir = whisper_cache / "snapshots"
+                if not snapshots_dir.exists():
+                    return False
+                
+                # Check for any snapshot directory (there should be one)
+                snapshot_dirs = [d for d in snapshots_dir.iterdir() if d.is_dir()]
+                if not snapshot_dirs:
+                    return False
+                
+                # Check if required files exist in the snapshot
+                snapshot_path = snapshot_dirs[0]  # Use the first (and likely only) snapshot
+                for file in required_files:
+                    file_path = snapshot_path / file
+                    if not file_path.exists() or file_path.stat().st_size == 0:
+                        return False
+                
+                return True
+                
+            elif model_type in ["mbart", "opus_mt"]:
+                # For Transformers models, check the HuggingFace cache structure
+                if model_type == "mbart":
+                    model_cache_path = self.cache_dir / "mbart" / f"models--{model_name.replace('/', '--')}"
+                else:
+                    model_cache_path = self.cache_dir / "opus_mt" / f"{model_name.replace('/', '--')}" / f"models--{model_name.replace('/', '--')}"
+                
+                required_files = ["config.json", "tokenizer_config.json"]
+                # Also check for model files (either .bin or .safetensors)
+                model_files = ["pytorch_model.bin", "model.safetensors"]
+                
+                # Find the snapshot directory
+                snapshots_dir = model_cache_path / "snapshots"
+                if not snapshots_dir.exists():
+                    return False
+                
+                # Check for any snapshot directory
+                snapshot_dirs = [d for d in snapshots_dir.iterdir() if d.is_dir()]
+                if not snapshot_dirs:
+                    return False
+                
+                # Check the latest snapshot
+                snapshot_path = max(snapshot_dirs, key=lambda x: x.stat().st_mtime)
+                
+                # Check required config files
+                for file in required_files:
+                    file_path = snapshot_path / file
+                    if not file_path.exists() or file_path.stat().st_size == 0:
+                        return False
+                
+                # Check for at least one model file
+                model_file_exists = any(
+                    (snapshot_path / model_file).exists() and (snapshot_path / model_file).stat().st_size > 0
+                    for model_file in model_files
+                )
+                
+                return model_file_exists
+                
+            elif model_type == "pyannote":
+                # For pyannote, it uses HuggingFace hub caching, harder to predict exact path
+                # We'll rely on the transformers library's cache detection
+                return False  # Let it attempt to load and handle caching automatically
+                
+        except Exception as e:
+            logger.warning(f"Error checking local files for {model_name}: {e}")
+            return False
+        
+        return False
+
+    def load_transformers_model_with_cache_check(self, model_name: str, cache_path: Path, model_type: str = "seq2seq") -> Optional[Dict[str, Any]]:
+        """
+        Load transformers model with intelligent cache checking and fallback.
+        """
+        try:
+            # First, check if we have valid local files
+            has_local_files = self.check_local_model_files(model_name, "mbart" if "mbart" in model_name else "opus_mt")
+            
+            if has_local_files:
+                console.print(f"[green]Found valid local cache for {model_name}, loading from cache...[/green]")
+                try:
+                    # Try loading from local cache first
+                    tokenizer = AutoTokenizer.from_pretrained(
+                        model_name,
+                        cache_dir=str(cache_path),
+                        local_files_only=True
+                    )
+                    
+                    model = AutoModelForSeq2SeqLM.from_pretrained(
+                        model_name,
+                        cache_dir=str(cache_path),
+                        local_files_only=True,
+                        torch_dtype=torch.float32 if self.device == "cpu" else torch.float16
+                    )
+                    
+                    console.print(f"[green]✓ Successfully loaded {model_name} from local cache[/green]")
+                    
+                except Exception as e:
+                    console.print(f"[yellow]Local cache load failed for {model_name}, will download: {e}[/yellow]")
+                    has_local_files = False  # Force download
+            
+            if not has_local_files:
+                console.print(f"[yellow]No valid local cache for {model_name}, downloading...[/yellow]")
+                # Load with download (default behavior)
+                tokenizer = AutoTokenizer.from_pretrained(
+                    model_name,
+                    cache_dir=str(cache_path)
+                )
+                
+                model = AutoModelForSeq2SeqLM.from_pretrained(
+                    model_name,
+                    cache_dir=str(cache_path),
+                    torch_dtype=torch.float32 if self.device == "cpu" else torch.float16
+                )
+                
+                console.print(f"[green]✓ Successfully downloaded and loaded {model_name}[/green]")
+            
+            # Move to device if needed
+            if self.device != "cpu":
+                model = model.to(self.device)
+            
+            # Test the model
+            test_input = tokenizer("Hello world", return_tensors="pt")
+            if self.device != "cpu":
+                test_input = {k: v.to(self.device) for k, v in test_input.items()}
+            
+            with torch.no_grad():
+                output = model.generate(**test_input, max_length=10)
+            
+            return {
+                "model": model,
+                "tokenizer": tokenizer
+            }
+            
+        except Exception as e:
+            console.print(f"[red]✗ Failed to load {model_name}: {e}[/red]")
+            logger.error(f"Model loading failed for {model_name}: {e}")
+            return None
+
     def get_system_info(self) -> Dict[str, Any]:
         """Get system information for optimal model loading."""
         return {
@@ -173,18 +319,28 @@ class ModelPreloader:
             return None
     
     def load_whisper_model(self, task_id: str) -> Optional[WhisperModel]:
-        """Load Whisper speech recognition model."""
+        """Load Whisper speech recognition model with enhanced cache checking."""
         try:
             console.print(f"[yellow]Loading Whisper model (small)...[/yellow]")
             
             # Determine compute type based on device
             compute_type = "int8" if self.device == "cpu" else "float16"
+            whisper_cache_dir = self.cache_dir / "whisper"
             
+            # Check if we have valid local files
+            has_local_files = self.check_local_model_files("small", "whisper")
+            
+            if has_local_files:
+                console.print(f"[green]Found valid local Whisper cache, loading from cache...[/green]")
+            else:
+                console.print(f"[yellow]No valid local Whisper cache found, will download...[/yellow]")
+            
+            # faster-whisper handles caching automatically, but we specify our cache dir
             model = WhisperModel(
                 "small",
                 device=self.device,
                 compute_type=compute_type,
-                download_root=str(self.cache_dir / "whisper")
+                download_root=str(whisper_cache_dir)
             )
             
             # Test the model with a dummy audio array
@@ -203,93 +359,23 @@ class ModelPreloader:
             return None
     
     def load_mbart_model(self, task_id: str) -> Optional[Dict[str, Any]]:
-        """Load mBART translation model."""
-        try:
-            console.print(f"[yellow]Loading mBART translation model...[/yellow]")
-            
-            model_name = "facebook/mbart-large-50-many-to-many-mmt"
-            cache_path = self.cache_dir / "mbart"
-            cache_path.mkdir(exist_ok=True)
-            
-            # Load tokenizer
-            tokenizer = AutoTokenizer.from_pretrained(
-                model_name,
-                cache_dir=str(cache_path)
-            )
-            
-            # Load model
-            model = AutoModelForSeq2SeqLM.from_pretrained(
-                model_name,
-                cache_dir=str(cache_path),
-                torch_dtype=torch.float32 if self.device == "cpu" else torch.float16
-            )
-            
-            if self.device != "cpu":
-                model = model.to(self.device)
-            
-            # Test the model
-            test_input = tokenizer("Hello world", return_tensors="pt")
-            if self.device != "cpu":
-                test_input = {k: v.to(self.device) for k, v in test_input.items()}
-            
-            with torch.no_grad():
-                output = model.generate(**test_input, max_length=10)
-            
-            console.print(f"[green]✓ mBART model loaded successfully on {self.device}[/green]")
-            
-            return {
-                "model": model,
-                "tokenizer": tokenizer
-            }
-            
-        except Exception as e:
-            console.print(f"[red]✗ Failed to load mBART model: {e}[/red]")
-            logger.error(f"mBART loading failed: {e}")
-            return None
+        """Load mBART translation model with enhanced cache checking."""
+        console.print(f"[yellow]Loading mBART translation model...[/yellow]")
+        
+        model_name = "facebook/mbart-large-50-many-to-many-mmt"
+        cache_path = self.cache_dir / "mbart"
+        cache_path.mkdir(exist_ok=True)
+        
+        return self.load_transformers_model_with_cache_check(model_name, cache_path, "seq2seq")
     
     def load_opus_mt_model(self, task_id: str, model_name: str) -> Optional[Dict[str, Any]]:
-        """Load Opus-MT translation model."""
-        try:
-            console.print(f"[yellow]Loading Opus-MT model: {model_name}...[/yellow]")
-            
-            cache_path = self.cache_dir / "opus_mt" / model_name.replace("/", "--")
-            cache_path.mkdir(parents=True, exist_ok=True)
-            
-            # Load tokenizer
-            tokenizer = AutoTokenizer.from_pretrained(
-                model_name,
-                cache_dir=str(cache_path)
-            )
-            
-            # Load model
-            model = AutoModelForSeq2SeqLM.from_pretrained(
-                model_name,
-                cache_dir=str(cache_path),
-                torch_dtype=torch.float32 if self.device == "cpu" else torch.float16
-            )
-            
-            if self.device != "cpu":
-                model = model.to(self.device)
-            
-            # Test the model
-            test_input = tokenizer("Hello world", return_tensors="pt")
-            if self.device != "cpu":
-                test_input = {k: v.to(self.device) for k, v in test_input.items()}
-            
-            with torch.no_grad():
-                output = model.generate(**test_input, max_length=10)
-            
-            console.print(f"[green]✓ {model_name} loaded successfully on {self.device}[/green]")
-            
-            return {
-                "model": model,
-                "tokenizer": tokenizer
-            }
-            
-        except Exception as e:
-            console.print(f"[red]✗ Failed to load {model_name}: {e}[/red]")
-            logger.error(f"Opus-MT loading failed: {e}")
-            return None
+        """Load Opus-MT translation model with enhanced cache checking."""
+        console.print(f"[yellow]Loading Opus-MT model: {model_name}...[/yellow]")
+        
+        cache_path = self.cache_dir / "opus_mt" / model_name.replace("/", "--")
+        cache_path.mkdir(parents=True, exist_ok=True)
+        
+        return self.load_transformers_model_with_cache_check(model_name, cache_path, "seq2seq")
     
     def preload_all_models(self) -> Dict[str, Any]:
         """Preload all models with progress tracking."""
@@ -465,4 +551,4 @@ def main():
 
 if __name__ == "__main__":
     success = main()
-    sys.exit(0 if success else 1) 
+    sys.exit(0 if success else 1)

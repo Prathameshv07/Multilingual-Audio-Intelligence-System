@@ -1,11 +1,11 @@
-name: Sync to Hugging Face hub
+name: Sync to Hugging Face hub and Google Drive
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  sync-to-hub:
+  sync-to-hub-and-drive:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -14,13 +14,137 @@ jobs:
           lfs: true
 
       # Ensure Git LFS is installed and fetch binary files
-      # Try Pull LFS files
       - name: Pull LFS files
         run: |
           git lfs install
           git lfs pull
 
-      - name: Push to hub
+      # Install pandoc for MD to PDF conversion
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended texlive-latex-extra
+
+      # Convert MD files to PDF
+      - name: Convert MD to PDF
+        run: |
+          mkdir -p pdf_output
+          find . -name "*.md" -not -path "./.git/*" -not -path "./pdf_output/*" | while read file; do
+            # Get the relative path and change extension to .pdf
+            relative_path="${file#./}"
+            pdf_path="pdf_output/${relative_path%.md}.pdf"
+            
+            # Create directory structure in pdf_output
+            mkdir -p "$(dirname "$pdf_path")"
+            
+            # Convert MD to PDF
+            pandoc "$file" -o "$pdf_path" --pdf-engine=pdflatex
+            echo "Converted $file to $pdf_path"
+          done
+
+      # Set up Python for Google Drive upload
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+
+      # Create Google Drive upload script
+      - name: Create upload script
+        run: |
+          cat > upload_to_drive.py << 'EOF'
+          import os
+          import json
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
+          import mimetypes
+
+          # Load credentials from environment
+          credentials_json = os.environ['GOOGLE_CREDENTIALS']
+          credentials_info = json.loads(credentials_json)
+          credentials = service_account.Credentials.from_service_account_info(credentials_info)
+
+          # Build the Drive service
+          service = build('drive', 'v3', credentials=credentials)
+
+          # Target folder ID
+          FOLDER_ID = '1-8HJcWxsUUQIj9OMXQeoeULS06RA9Hg9'
+
+          def get_mime_type(file_path):
+              mime_type, _ = mimetypes.guess_type(file_path)
+              return mime_type or 'application/octet-stream'
+
+          def upload_file(file_path, parent_folder_id, drive_service):
+              file_name = os.path.basename(file_path)
+              
+              # Check if file already exists
+              query = f"name='{file_name}' and '{parent_folder_id}' in parents and trashed=false"
+              results = drive_service.files().list(q=query).execute()
+              items = results.get('files', [])
+              
+              media = MediaFileUpload(file_path, mimetype=get_mime_type(file_path), resumable=True)
+              
+              if items:
+                  # Update existing file
+                  file_id = items[0]['id']
+                  updated_file = drive_service.files().update(
+                      fileId=file_id,
+                      media_body=media
+                  ).execute()
+                  print(f'Updated: {file_name} (ID: {updated_file.get("id")})')
+              else:
+                  # Create new file
+                  file_metadata = {
+                      'name': file_name,
+                      'parents': [parent_folder_id]
+                  }
+                  file = drive_service.files().create(
+                      body=file_metadata,
+                      media_body=media,
+                      fields='id'
+                  ).execute()
+                  print(f'Uploaded: {file_name} (ID: {file.get("id")})')
+
+          def upload_directory(local_path, parent_folder_id, drive_service, exclude_dirs=None):
+              if exclude_dirs is None:
+                  exclude_dirs = ['.git', '.github', 'node_modules', '__pycache__']
+              
+              for root, dirs, files in os.walk(local_path):
+                  # Remove excluded directories
+                  dirs[:] = [d for d in dirs if d not in exclude_dirs]
+                  
+                  for file in files:
+                      file_path = os.path.join(root, file)
+                      try:
+                          upload_file(file_path, parent_folder_id, drive_service)
+                      except Exception as e:
+                          print(f'Error uploading {file_path}: {e}')
+
+          # Upload all files to Google Drive
+          print("Starting upload to Google Drive...")
+          upload_directory('.', FOLDER_ID, service)
+
+          # Upload PDF files if they exist
+          if os.path.exists('pdf_output'):
+              print("Uploading converted PDF files...")
+              upload_directory('pdf_output', FOLDER_ID, service)
+
+          print("Upload completed!")
+          EOF
+
+      # Upload to Google Drive
+      - name: Upload to Google Drive
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python upload_to_drive.py
+
+      # Push to Hugging Face (original functionality)
+      - name: Push to Hugging Face hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
