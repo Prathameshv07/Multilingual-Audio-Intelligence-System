@@ -1,5 +1,5 @@
 name: Check file size and sync to Google Drive
-on
+on:
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -31,22 +31,78 @@ jobs:
           git lfs install
           git lfs pull
 
-      # Install pandoc for MD to PDF conversion
-      - name: Install pandoc
+      # Install pandoc and fonts for proper Unicode/emoji support
+      - name: Install pandoc and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended texlive-latex-extra
+          sudo apt-get install -y \
+            pandoc \
+            texlive-xetex \
+            texlive-fonts-recommended \
+            texlive-fonts-extra \
+            fonts-dejavu \
+            fonts-liberation \
+            python3-pip
+          
+          # Install weasyprint as fallback
+          pip install weasyprint
 
       # Convert MD files to PDF
       - name: Convert MD to PDF
         run: |
-          mkdir -p pdf_output
-          find . -name "*.md" -not -path "./.git/*" -not -path "./pdf_output/*" | while read file; do
-            relative_path="${file#./}"
-            pdf_path="pdf_output/${relative_path%.md}.pdf"
-            mkdir -p "$(dirname "$pdf_path")"
-            pandoc "$file" -o "$pdf_path" --pdf-engine=pdflatex
-            echo "Converted $file to $pdf_path"
+          find . -name "*.md" -not -path "./.git/*" | while read file; do
+            # Get the directory and filename
+            dir="$(dirname "$file")"
+            filename="$(basename "$file" .md)"
+            pdf_path="$dir/$filename.pdf"
+            
+            echo "Converting $file to $pdf_path"
+            
+            # Convert MD to PDF with proper Unicode support and image handling
+            pandoc "$file" \
+              -o "$pdf_path" \
+              --pdf-engine=xelatex \
+              --variable mainfont="DejaVu Sans" \
+              --variable sansfont="DejaVu Sans" \
+              --variable monofont="DejaVu Sans Mono" \
+              --include-in-header=<(echo '\usepackage{graphicx}') \
+              --include-in-header=<(echo '\usepackage{float}') \
+              --include-in-header=<(echo '\floatplacement{figure}{H}') \
+              --resource-path="$dir" \
+              --standalone \
+              --toc \
+              --number-sections \
+              --highlight-style=github \
+              -V geometry:margin=1in \
+              -V colorlinks=true \
+              -V linkcolor=blue \
+              -V urlcolor=blue \
+              -V toccolor=gray \
+              --wrap=auto \
+              --dpi=300 \
+              --verbose || {
+                echo "Error converting $file with xelatex, trying with weasyprint..."
+                # Fallback to HTML->PDF conversion for complex documents
+                pandoc "$file" \
+                  -t html5 \
+                  --standalone \
+                  --self-contained \
+                  --css=<(echo 'body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;line-height:1.6}img{max-width:100%;height:auto}pre{background:#f5f5f5;padding:10px;border-radius:5px;overflow-x:auto}') \
+                  -o "$dir/$filename.html"
+                
+                # Use weasyprint for HTML to PDF conversion
+                weasyprint "$dir/$filename.html" "$pdf_path" || {
+                  echo "Both conversions failed for $file, skipping..."
+                  continue
+                }
+                rm -f "$dir/$filename.html"
+              }
+            
+            if [ -f "$pdf_path" ]; then
+              echo "Successfully converted $file to $pdf_path"
+            else
+              echo "Failed to convert $file"
+            fi
           done
 
       # Set up Python for Google Drive upload
@@ -112,14 +168,29 @@ jobs:
                   ).execute()
                   print(f'Uploaded PR Preview: {file_name}')
 
-          def upload_directory(local_path, parent_folder_id, drive_service, exclude_dirs=None):
+          def upload_directory(local_path, parent_folder_id, drive_service, exclude_dirs=None, exclude_files=None):
               if exclude_dirs is None:
                   exclude_dirs = ['.git', '.github', 'node_modules', '__pycache__']
+              if exclude_files is None:
+                  exclude_files = ['*.md']  # Skip markdown files
+              
+              import fnmatch
               
               for root, dirs, files in os.walk(local_path):
                   dirs[:] = [d for d in dirs if d not in exclude_dirs]
                   
                   for file in files:
+                      # Skip excluded file patterns (like *.md)
+                      should_skip = False
+                      for pattern in exclude_files:
+                          if fnmatch.fnmatch(file, pattern):
+                              should_skip = True
+                              break
+                      
+                      if should_skip:
+                          print(f'Skipping {file} (excluded file type)')
+                          continue
+                      
                       file_path = os.path.join(root, file)
                       try:
                           upload_file(file_path, parent_folder_id, drive_service)
@@ -129,11 +200,7 @@ jobs:
           print("Starting PR preview upload to Google Drive...")
           upload_directory('.', FOLDER_ID, service)
 
-          if os.path.exists('pdf_output'):
-              print("Uploading converted PDF files...")
-              upload_directory('pdf_output', FOLDER_ID, service)
-
-          print("PR preview upload completed!")
+          print("PR preview upload completed - MD files were skipped, PDFs were uploaded!")
           EOF
           
           python upload_to_drive.py
