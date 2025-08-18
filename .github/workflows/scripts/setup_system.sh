@@ -17,7 +17,7 @@ sudo apt-get install -y \
   wkhtmltopdf
 
 echo "Installing Node.js dependencies for Mermaid..."
-npm install -g @mermaid-js/mermaid-cli
+npm install -g @mermaid-js/mermaid-cli@latest
 npm install -g puppeteer
 sudo apt-get install -y google-chrome-stable
 

@@ -26,12 +26,20 @@ def process_mermaid_diagrams(content, file_dir):
             return f'\n```\n{mermaid_code}\n```\n'
 
         try:
-            # Convert to SVG with --no-sandbox flag for CI environments
-            result = subprocess.run([
-                'mmdc', '-i', mermaid_file, '-o', svg_file,
-                '--theme', 'default', '--backgroundColor', 'white',
-                '--puppeteerConfig', '{"args": ["--no-sandbox", "--disable-setuid-sandbox"]}'
-            ], check=True, capture_output=True, text=True)
+            # Method 1: Try with config file (newer versions)
+            config_file = os.path.join(file_dir, '..', '..', '.github', 'workflows', 'puppeteer-config.json')
+            if os.path.exists(config_file):
+                result = subprocess.run([
+                    'mmdc', '-i', mermaid_file, '-o', svg_file,
+                    '--theme', 'default', '--backgroundColor', 'white',
+                    '--configFile', config_file
+                ], check=True, capture_output=True, text=True)
+            else:
+                # Method 2: Try without puppeteer config (fallback)
+                result = subprocess.run([
+                    'mmdc', '-i', mermaid_file, '-o', svg_file,
+                    '--theme', 'default', '--backgroundColor', 'white'
+                ], check=True, capture_output=True, text=True)
 
             # Convert SVG to PNG for better PDF compatibility
             subprocess.run([
@@ -57,11 +65,41 @@ def process_mermaid_diagrams(content, file_dir):
         except subprocess.CalledProcessError as e:
             print(f"Error converting mermaid diagram: {e}")
             print(f"Command output: {e.stderr if e.stderr else 'No stderr'}")
+            
+            # Fallback: Try basic mmdc command without any config
             try:
-                os.remove(mermaid_file)
-            except:
-                pass
-            return f'\n```\n{mermaid_code}\n```\n'
+                print("Trying basic mmdc command...")
+                subprocess.run([
+                    'mmdc', '-i', mermaid_file, '-o', svg_file
+                ], check=True, capture_output=True, text=True)
+                
+                # Convert to PNG
+                subprocess.run([
+                    'rsvg-convert', '-f', 'png', '-o', png_file,
+                    '--width', '1200', '--height', '800', svg_file
+                ], check=True, capture_output=True, text=True)
+                
+                # Clean up
+                try:
+                    os.remove(mermaid_file)
+                    if os.path.exists(svg_file):
+                        os.remove(svg_file)
+                except:
+                    pass
+                
+                return (
+                    f'\n<div class="mermaid-container">\n\n'
+                    f'![Architecture Diagram]({os.path.basename(png_file)})\n\n'
+                    f'</div>\n'
+                )
+                
+            except subprocess.CalledProcessError as e2:
+                print(f"Basic mmdc also failed: {e2}")
+                try:
+                    os.remove(mermaid_file)
+                except:
+                    pass
+                return f'\n```\n{mermaid_code}\n```\n'
 
         except Exception as e:
             print(f"Unexpected error with mermaid: {e}")
