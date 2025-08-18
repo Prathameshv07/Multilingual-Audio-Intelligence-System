@@ -1,0 +1,109 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 20mm;
+    line-height: 1.6;
+    color: #333;
+    background: white;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+pre {
+    background: #f8f9fa;
+    padding: 1em;
+    border-radius: 6px;
+    border-left: 4px solid #007acc;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+code {
+    background: #f1f3f4;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #2c3e50;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    page-break-after: avoid;
+}
+
+h1 {
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 0.5em;
+}
+
+h2 {
+    border-bottom: 2px solid #95a5a6;
+    padding-bottom: 0.3em;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 0.75em;
+    text-align: left;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+blockquote {
+    border-left: 4px solid #3498db;
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    background: #f8f9fa;
+    border-radius: 0 4px 4px 0;
+}
+
+.mermaid-container {
+    text-align: center;
+    margin: 2em 0;
+    page-break-inside: avoid;
+}
+
+.mermaid-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+@media print {
+    body {
+        margin: 0;
+        padding: 15mm;
+    }
+    
+    img {
+        max-height: 80vh;
+        page-break-inside: avoid;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    
+    pre, blockquote {
+        page-break-inside: avoid;
+    }
+}

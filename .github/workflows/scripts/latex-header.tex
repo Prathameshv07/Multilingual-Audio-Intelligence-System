@@ -1,0 +1,42 @@
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{adjustbox}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+
+% Set fonts with emoji support
+\setmainfont{DejaVu Sans}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+
+% Try to set a font with emoji support as fallback
+\newfontfamily\emojifont{Apple Color Emoji}[Renderer=Harfbuzz]
+
+% Better image positioning and scaling
+\floatplacement{figure}{H}
+\let\oldincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{%
+    \adjustbox{max width=\textwidth,center}{\oldincludegraphics[#1]{#2}}%
+}
+
+% Set margins - FIXED: Reduced margins significantly
+\geometry{
+    top=0.5in,
+    left=0.5in,
+    right=0.5in,
+    bottom=0.5in
+}
+
+% Hyperlink colors
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
