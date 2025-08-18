@@ -47,6 +47,8 @@ jobs:
         run: |
           npm install -g @mermaid-js/mermaid-cli
           npm install -g puppeteer
+          # Set up chrome for mermaid-cli in GitHub Actions
+          sudo apt-get install -y google-chrome-stable
 
       # Install Python dependencies
       - name: Install Python dependencies
@@ -77,6 +79,16 @@ jobs:
           \usepackage{fancyhdr}
           \usepackage{xcolor}
           \usepackage{hyperref}
+          \usepackage{fontspec}
+          \usepackage{unicode-math}
+          
+          % Set fonts with emoji support
+          \setmainfont{DejaVu Sans}
+          \setsansfont{DejaVu Sans}
+          \setmonofont{DejaVu Sans Mono}
+          
+          % Try to set a font with emoji support as fallback
+          \newfontfamily\emojifont{Apple Color Emoji}[Renderer=Harfbuzz]
           
           % Better image positioning and scaling
           \floatplacement{figure}{H}
@@ -210,7 +222,7 @@ jobs:
           }
           EOF
 
-      # Fixed preprocessing script
+      # Fixed preprocessing script with no-sandbox mermaid
       - name: Create preprocessing script
         run: |
           cat > preprocess_markdown.py << 'EOF'
@@ -242,10 +254,11 @@ jobs:
                       return f'\n```\n{mermaid_code}\n```\n'
                   
                   try:
-                      # Convert to SVG first
+                      # Convert to SVG first with no-sandbox flags
                       result = subprocess.run([
                           'mmdc', '-i', mermaid_file, '-o', svg_file,
-                          '--theme', 'default', '--backgroundColor', 'white'
+                          '--theme', 'default', '--backgroundColor', 'white',
+                          '--puppeteerConfig', '{"args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]}'
                       ], check=True, capture_output=True, text=True)
                       
                       # Convert SVG to PNG for better PDF compatibility
@@ -257,9 +270,6 @@ jobs:
                       # Clean up intermediate files
                       try:
                           os.remove(mermaid_file)
-                      except:
-                          pass
-                      try:
                           if os.path.exists(svg_file):
                               os.remove(svg_file)
                       except:
@@ -279,7 +289,6 @@ jobs:
                       return f'\n```\n{mermaid_code}\n```\n'
                   except Exception as e:
                       print(f"Unexpected error with mermaid: {e}")
-                      # Clean up files on error
                       try:
                           os.remove(mermaid_file)
                       except:
@@ -288,8 +297,22 @@ jobs:
               
               return re.sub(mermaid_pattern, replace_mermaid, content, flags=re.DOTALL)
 
-          def fix_image_paths(content, file_dir):
-              """Fix image paths and add proper sizing"""
+          def clean_emojis_and_fix_images(content, file_dir):
+              """Remove/replace emojis and fix image paths"""
+              # Remove or replace problematic emojis that cause LaTeX issues
+              emoji_replacements = {
+                  '🎵': '[Audio]',
+                  '🎬': '[Video]', 
+                  '📝': '[Document]',
+                  '📊': '[Analytics]',
+                  '🧠': '[AI]',
+                  '🎥': '[Media]',
+                  '📄': '[File]'
+              }
+              
+              for emoji, replacement in emoji_replacements.items():
+                  content = content.replace(emoji, replacement)
+              
               # Pattern to match markdown images
               img_pattern = r'!\[([^\]]*)\]\(([^)]+)\)'
               
@@ -307,7 +330,6 @@ jobs:
                   # Add HTML img tag with better control
                   return f'<img src="{img_path}" alt="{alt_text}" style="max-width: 100%; height: auto; display: block; margin: 1em auto;" />'
               
-              # Also handle HTML img tags and ensure they have proper styling
               content = re.sub(img_pattern, replace_image, content)
               
               # Fix existing HTML img tags
@@ -326,7 +348,6 @@ jobs:
               
               md_file = sys.argv[1]
               
-              # Check if file exists
               if not os.path.exists(md_file):
                   print(f"Error: File {md_file} does not exist")
                   sys.exit(1)
@@ -342,12 +363,11 @@ jobs:
                   print(f"Content length: {len(content)} characters")
                   
                   # Process mermaid diagrams
-                  original_content_length = len(content)
                   content = process_mermaid_diagrams(content, file_dir)
                   print(f"Mermaid processing complete. Content length: {len(content)}")
                   
-                  # Fix image paths and sizing
-                  content = fix_image_paths(content, file_dir)
+                  # Clean emojis and fix image paths
+                  content = clean_emojis_and_fix_images(content, file_dir)
                   print(f"Image path fixing complete. Content length: {len(content)}")
                   
                   # Write processed content
@@ -356,8 +376,7 @@ jobs:
                       f.write(content)
                   
                   print(f"Processed file saved as: {processed_file}")
-                  print(processed_file)  # This is what the shell script captures
-                  return processed_file
+                  print(processed_file)
                   
               except Exception as e:
                   print(f"Error processing {md_file}: {e}")
