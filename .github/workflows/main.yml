@@ -368,7 +368,7 @@ jobs:
               --standalone \
               --toc \
               --number-sections \
-              --syntax-highlighting=pygments \
+              --highlight-style=pygments \
               --wrap=auto \
               --dpi=300 \
               --verbose 2>/dev/null || {
@@ -383,7 +383,7 @@ jobs:
                 --css="$GITHUB_WORKSPACE/styles.css" \
                 --toc \
                 --number-sections \
-                --syntax-highlighting=pygments \
+                --highlight-style=pygments \
                 -o "$dir/$filename.html"
               
               if [ -f "$dir/$filename.html" ]; then
