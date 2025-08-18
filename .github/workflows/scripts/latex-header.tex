@@ -3,7 +3,8 @@
 \usepackage{adjustbox}
 \usepackage{caption}
 \usepackage{subcaption}
-\usepackage{geometry}
+% \usepackage[top=0.5in,left=0.5in,right=0.5in,bottom=0.5in]{geometry}
+\usepackage[a4paper,top=2.25cm,bottom=2.25cm,left=1.9cm,right=1.9cm]{geometry}
 \usepackage{fancyhdr}
 \usepackage{xcolor}
 \usepackage{hyperref}
@@ -15,9 +16,6 @@
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
 
-% Try to set a font with emoji support as fallback
-\newfontfamily\emojifont{Apple Color Emoji}[Renderer=Harfbuzz]
-
 % Better image positioning and scaling
 \floatplacement{figure}{H}
 \let\oldincludegraphics\includegraphics
@@ -25,13 +23,8 @@
     \adjustbox{max width=\textwidth,center}{\oldincludegraphics[#1]{#2}}%
 }
 
-% Set margins - FIXED: Reduced margins significantly
-\geometry{
-    top=0.5in,
-    left=0.5in,
-    right=0.5in,
-    bottom=0.5in
-}
+% Try to set a font with emoji support as fallback
+\newfontfamily\emojifont{Noto Color Emoji}[Renderer=Harfbuzz]
 
 % Hyperlink colors
 \hypersetup{

@@ -26,10 +26,11 @@ def process_mermaid_diagrams(content, file_dir):
             return f'\n```\n{mermaid_code}\n```\n'
 
         try:
-            # Convert to SVG first - FIXED: Remove --puppeteerConfig
+            # Convert to SVG with --no-sandbox flag for CI environments
             result = subprocess.run([
                 'mmdc', '-i', mermaid_file, '-o', svg_file,
-                '--theme', 'default', '--backgroundColor', 'white'
+                '--theme', 'default', '--backgroundColor', 'white',
+                '--puppeteerConfig', '{"args": ["--no-sandbox", "--disable-setuid-sandbox"]}'
             ], check=True, capture_output=True, text=True)
 
             # Convert SVG to PNG for better PDF compatibility
@@ -81,7 +82,9 @@ def clean_emojis_and_fix_images(content, file_dir):
         '📊': '[Analytics]',
         '🧠': '[AI]',
         '🎥': '[Media]',
-        '📄': '[File]'
+        '📄': '[File]',
+        '✅': '[Success]',
+        '❌': '[Failed]'
     }
 
     for emoji, replacement in emoji_replacements.items():
