@@ -210,7 +210,7 @@ jobs:
           }
           EOF
 
-      # Create preprocessing script
+      # Fixed preprocessing script
       - name: Create preprocessing script
         run: |
           cat > preprocess_markdown.py << 'EOF'
@@ -220,7 +220,7 @@ jobs:
           import sys
           import subprocess
           from pathlib import Path
-          
+
           def process_mermaid_diagrams(content, file_dir):
               """Convert mermaid diagrams to images"""
               mermaid_pattern = r'```mermaid\n(.*?)\n```'
@@ -234,39 +234,60 @@ jobs:
                   png_file = f"{file_dir}/mermaid_{diagram_hash}.png"
                   
                   # Write mermaid code to file
-                  with open(mermaid_file, 'w') as f:
-                      f.write(mermaid_code)
+                  try:
+                      with open(mermaid_file, 'w', encoding='utf-8') as f:
+                          f.write(mermaid_code)
+                  except Exception as e:
+                      print(f"Error writing mermaid file: {e}")
+                      return f'\n```\n{mermaid_code}\n```\n'
                   
                   try:
                       # Convert to SVG first
-                      subprocess.run([
+                      result = subprocess.run([
                           'mmdc', '-i', mermaid_file, '-o', svg_file,
                           '--theme', 'default', '--backgroundColor', 'white'
-                      ], check=True, capture_output=True)
+                      ], check=True, capture_output=True, text=True)
                       
                       # Convert SVG to PNG for better PDF compatibility
                       subprocess.run([
                           'rsvg-convert', '-f', 'png', '-o', png_file,
                           '--width', '1200', '--height', '800', svg_file
-                      ], check=True, capture_output=True)
+                      ], check=True, capture_output=True, text=True)
                       
                       # Clean up intermediate files
-                      os.remove(mermaid_file)
-                      if os.path.exists(svg_file):
-                          os.remove(svg_file)
+                      try:
+                          os.remove(mermaid_file)
+                      except:
+                          pass
+                      try:
+                          if os.path.exists(svg_file):
+                              os.remove(svg_file)
+                      except:
+                          pass
                       
                       # Return markdown image syntax
                       return f'\n<div class="mermaid-container">\n\n![Architecture Diagram]({os.path.basename(png_file)})\n\n</div>\n'
                       
                   except subprocess.CalledProcessError as e:
                       print(f"Error converting mermaid diagram: {e}")
+                      print(f"Command output: {e.stderr if e.stderr else 'No stderr'}")
+                      # Clean up files on error
+                      try:
+                          os.remove(mermaid_file)
+                      except:
+                          pass
                       return f'\n```\n{mermaid_code}\n```\n'
                   except Exception as e:
                       print(f"Unexpected error with mermaid: {e}")
+                      # Clean up files on error
+                      try:
+                          os.remove(mermaid_file)
+                      except:
+                          pass
                       return f'\n```\n{mermaid_code}\n```\n'
               
               return re.sub(mermaid_pattern, replace_mermaid, content, flags=re.DOTALL)
-          
+
           def fix_image_paths(content, file_dir):
               """Fix image paths and add proper sizing"""
               # Pattern to match markdown images
@@ -297,32 +318,53 @@ jobs:
               )
               
               return content
-          
+
           def main():
               if len(sys.argv) != 2:
                   print("Usage: python preprocess_markdown.py <markdown_file>")
                   sys.exit(1)
               
               md_file = sys.argv[1]
-              file_dir = os.path.dirname(os.path.abspath(md_file))
               
-              with open(md_file, 'r', encoding='utf-8') as f:
-                  content = f.read()
+              # Check if file exists
+              if not os.path.exists(md_file):
+                  print(f"Error: File {md_file} does not exist")
+                  sys.exit(1)
               
-              # Process mermaid diagrams
-              content = process_mermaid_diagrams(content, file_dir)
-              
-              # Fix image paths and sizing
-              content = fix_image_paths(content, file_dir)
-              
-              # Write processed content
-              processed_file = md_file.replace('.md', '_processed.md')
-              with open(processed_file, 'w', encoding='utf-8') as f:
-                  f.write(content)
-              
-              print(f"Processed file saved as: {processed_file}")
-              return processed_file
-          
+              try:
+                  file_dir = os.path.dirname(os.path.abspath(md_file))
+                  
+                  with open(md_file, 'r', encoding='utf-8') as f:
+                      content = f.read()
+                  
+                  print(f"Processing file: {md_file}")
+                  print(f"File directory: {file_dir}")
+                  print(f"Content length: {len(content)} characters")
+                  
+                  # Process mermaid diagrams
+                  original_content_length = len(content)
+                  content = process_mermaid_diagrams(content, file_dir)
+                  print(f"Mermaid processing complete. Content length: {len(content)}")
+                  
+                  # Fix image paths and sizing
+                  content = fix_image_paths(content, file_dir)
+                  print(f"Image path fixing complete. Content length: {len(content)}")
+                  
+                  # Write processed content
+                  processed_file = md_file.replace('.md', '_processed.md')
+                  with open(processed_file, 'w', encoding='utf-8') as f:
+                      f.write(content)
+                  
+                  print(f"Processed file saved as: {processed_file}")
+                  print(processed_file)  # This is what the shell script captures
+                  return processed_file
+                  
+              except Exception as e:
+                  print(f"Error processing {md_file}: {e}")
+                  import traceback
+                  traceback.print_exc()
+                  sys.exit(1)
+
           if __name__ == "__main__":
               main()
           EOF
@@ -339,14 +381,67 @@ jobs:
             pdf_path="$dir/$filename.pdf"
             
             echo "Processing $file..."
+            echo "Directory: $dir"
+            echo "Filename: $filename"
+            echo "PDF path: $pdf_path"
+            
+            # Check if file exists and is readable
+            if [ ! -f "$file" ]; then
+              echo "ERROR: File $file does not exist"
+              continue
+            fi
+            
+            if [ ! -r "$file" ]; then
+              echo "ERROR: File $file is not readable"
+              continue
+            fi
+            
+            # Show file info for debugging
+            echo "File size: $(wc -c < "$file") bytes"
+            echo "File permissions: $(ls -la "$file")"
             
             # Preprocess the markdown file
             cd "$dir"
-            processed_file=$(python3 "$GITHUB_WORKSPACE/preprocess_markdown.py" "$(basename "$file")")
+            echo "Changed to directory: $(pwd)"
+            echo "Running preprocessing script..."
             
-            if [ ! -f "$processed_file" ]; then
-              echo "Preprocessing failed for $file, using original"
+            # Debug: Check if preprocessing script exists and is executable
+            if [ ! -f "$GITHUB_WORKSPACE/preprocess_markdown.py" ]; then
+              echo "ERROR: Preprocessing script not found at $GITHUB_WORKSPACE/preprocess_markdown.py"
               processed_file="$(basename "$file")"
+            elif [ ! -x "$GITHUB_WORKSPACE/preprocess_markdown.py" ]; then
+              echo "WARNING: Preprocessing script is not executable, trying anyway..."
+              processed_file=$(python3 "$GITHUB_WORKSPACE/preprocess_markdown.py" "$(basename "$file")" 2>&1)
+              if [ $? -ne 0 ]; then
+                echo "Preprocessing failed with output: $processed_file"
+                processed_file="$(basename "$file")"
+              else
+                echo "Preprocessing succeeded: $processed_file"
+              fi
+            else
+              processed_file=$(python3 "$GITHUB_WORKSPACE/preprocess_markdown.py" "$(basename "$file")" 2>&1)
+              exit_code=$?
+              echo "Preprocessing exit code: $exit_code"
+              echo "Preprocessing output: $processed_file"
+              
+              if [ $exit_code -ne 0 ]; then
+                echo "Preprocessing failed, using original file"
+                processed_file="$(basename "$file")"
+              fi
+            fi
+            
+            # Verify processed file exists
+            if [ ! -f "$processed_file" ]; then
+              echo "Processed file $processed_file does not exist, using original"
+              processed_file="$(basename "$file")"
+            fi
+            
+            echo "Using file for conversion: $processed_file"
+            
+            # Check if pandoc is available
+            if ! command -v pandoc &> /dev/null; then
+              echo "ERROR: pandoc is not installed or not in PATH"
+              continue
             fi
             
             echo "Converting $processed_file to $pdf_path"
@@ -371,7 +466,7 @@ jobs:
               --highlight-style=pygments \
               --wrap=auto \
               --dpi=300 \
-              --verbose 2>/dev/null || {
+              --verbose 2>&1 || {
               
               echo "XeLaTeX failed, trying HTML->PDF conversion..."
               
@@ -384,10 +479,11 @@ jobs:
                 --toc \
                 --number-sections \
                 --highlight-style=pygments \
-                -o "$dir/$filename.html"
+                -o "$dir/$filename.html" 2>&1
               
               if [ -f "$dir/$filename.html" ]; then
-                weasyprint "$dir/$filename.html" "$pdf_path" --presentational-hints || {
+                echo "HTML file created, attempting WeasyPrint conversion..."
+                weasyprint "$dir/$filename.html" "$pdf_path" --presentational-hints 2>&1 || {
                   echo "WeasyPrint failed, trying wkhtmltopdf..."
                   
                   # Method 3: wkhtmltopdf as final fallback
@@ -400,7 +496,7 @@ jobs:
                     --encoding UTF-8 \
                     --no-outline \
                     --enable-local-file-access \
-                    "$dir/$filename.html" "$pdf_path" || {
+                    "$dir/$filename.html" "$pdf_path" 2>&1 || {
                     echo "All conversion methods failed for $file"
                     continue
                   }
@@ -408,12 +504,16 @@ jobs:
                 
                 # Clean up HTML file
                 rm -f "$dir/$filename.html"
+              else
+                echo "Failed to create HTML file for $file"
+                continue
               fi
             }
             
-            # Clean up processed file
+            # Clean up processed file if it's different from original
             if [ "$processed_file" != "$(basename "$file")" ]; then
               rm -f "$processed_file"
+              echo "Cleaned up processed file: $processed_file"
             fi
             
             # Clean up generated mermaid images
@@ -421,11 +521,15 @@ jobs:
             
             if [ -f "$pdf_path" ]; then
               echo "✅ Successfully converted $file to $pdf_path"
+              echo "PDF file size: $(wc -c < "$pdf_path") bytes"
             else
               echo "❌ Failed to convert $file"
             fi
+            
+            # Return to original directory
+            cd "$GITHUB_WORKSPACE"
           done
-
+      
       # Upload PDF artifacts
       - name: Upload PDF artifacts
         uses: actions/upload-artifact@v4
