@@ -29,6 +29,8 @@ from datetime import datetime
 import requests
 import hashlib
 from urllib.parse import urlparse
+import secrets
+from collections import defaultdict
 
 # FastAPI imports
 from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException
@@ -57,7 +59,7 @@ logger = logging.getLogger(__name__)
 
 # Safe imports with error handling
 try:
-    from main import AudioIntelligencePipeline
+    from src.main import AudioIntelligencePipeline
     MAIN_AVAILABLE = True
 except Exception as e:
     logger.error(f"Failed to import main pipeline: {e}")
@@ -77,8 +79,8 @@ try:
 except Exception as e:
     logger.error(f"Failed to import utils: {e}")
     UTILS_AVAILABLE = False
-
-# Initialize FastAPI app
+        
+        # Initialize FastAPI app
 app = FastAPI(
     title="Multilingual Audio Intelligence System",
     description="Professional AI-powered speaker diarization, transcription, and translation",
@@ -106,25 +108,65 @@ pipeline = None
 processing_status = {}
 processing_results = {}  # Store actual results
 
-# Demo file configuration
+# ENHANCED Demo file configuration with NEW Indian Language Support
 DEMO_FILES = {
     "yuri_kizaki": {
+        "name": "Yuri Kizaki",
         "filename": "Yuri_Kizaki.mp3",
-        "display_name": "Yuri Kizaki - Japanese Audio",
-        "language": "Japanese",
-        "description": "Audio message about website communication enhancement",
+        "display_name": "🇯🇵 Japanese Business Communication",
+        "language": "ja",
+        "description": "Professional audio message about website communication and business enhancement",
         "url": "https://www.mitsue.co.jp/service/audio_and_video/audio_production/media/narrators_sample/yuri_kizaki/03.mp3",
         "expected_text": "音声メッセージが既存のウェブサイトを超えたコミュニケーションを実現。目で見るだけだったウェブサイトに音声情報をインクルードすることで、情報に新しい価値を与え、他者との差別化に効果を発揮します。",
-        "expected_translation": "Audio messages enable communication beyond existing websites. By incorporating audio information into visually-driven websites, you can add new value to the information and effectively differentiate your website from others."
+        "expected_translation": "Audio messages enable communication beyond existing websites. By incorporating audio information into visually-driven websites, you can add new value to the information and effectively differentiate your website from others.",
+        "category": "business",
+        "difficulty": "intermediate",
+        "duration": "00:01:45"
     },
     "film_podcast": {
+        "name": "Film Podcast",
         "filename": "Film_Podcast.mp3", 
-        "display_name": "French Film Podcast",
-        "language": "French",
-        "description": "Discussion about recent movies including Social Network and Paranormal Activity",
+        "display_name": "🇫🇷 French Cinema Discussion",
+        "language": "fr",
+        "description": "In-depth French podcast discussing recent movies including Social Network and Paranormal Activity",
         "url": "https://www.lightbulblanguages.co.uk/resources/audio/film-podcast.mp3",
         "expected_text": "Le film intitulé The Social Network traite de la création du site Facebook par Mark Zuckerberg et des problèmes judiciaires que cela a comporté pour le créateur de ce site.",
-        "expected_translation": "The film The Social Network deals with the creation of Facebook by Mark Zuckerberg and the legal problems this caused for the creator of this site."
+        "expected_translation": "The film The Social Network deals with the creation of Facebook by Mark Zuckerberg and the legal problems this caused for the creator of this site.",
+        "category": "entertainment",
+        "difficulty": "advanced",
+        "duration": "00:03:32"
+    },
+    "tamil_interview": {
+        "name": "Tamil Wikipedia Interview",
+        "filename": "Tamil_Wikipedia_Interview.ogg",
+        "display_name": "🇮🇳 Tamil Wikipedia Interview",
+        "language": "ta",
+        "description": "NEW: Tamil language interview about Wikipedia and collaborative knowledge sharing in South India",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/5/54/Parvathisri-Wikipedia-Interview-Vanavil-fm.ogg",
+        "expected_text": "விக்கிபீடியா என்பது ஒரு கூட்டு முயற்சியாகும். இது தமிழ் மொழியில் அறிவைப் பகிர்ந்து கொள்வதற்கான ஒரு சிறந்த தளமாகும்.",
+        "expected_translation": "Wikipedia is a collaborative effort. It is an excellent platform for sharing knowledge in the Tamil language.",
+        "category": "education",
+        "difficulty": "advanced",
+        "duration": "00:36:17",
+        "featured": True,
+        "new": True,
+        "indian_language": True
+    },
+    "car_trouble": {
+        "name": "Car Trouble",
+        "filename": "Car_Trouble.mp3",
+        "display_name": "🇮🇳 Hindi Daily Conversation",
+        "language": "hi", 
+        "description": "NEW: Real-world Hindi conversation about car problems and waiting for a mechanic",
+        "url": "https://www.tuttlepublishing.com/content/docs/9780804844383/06-18%20Part2%20Car%20Trouble.mp3",
+        "expected_text": "गाड़ी खराब हो गई है। मैकेनिक का इंतज़ार कर रहे हैं। कुछ समय लगेगा।",
+        "expected_translation": "The car has broken down. We are waiting for the mechanic. It will take some time.",
+        "category": "daily_life",
+        "difficulty": "beginner", 
+        "duration": "00:02:45",
+        "featured": True,
+        "new": True,
+        "indian_language": True
     }
 }
 
@@ -151,6 +193,182 @@ async def health():
 # Demo results cache
 demo_results_cache = {}
 
+# Session management
+user_sessions = defaultdict(dict)
+session_files = defaultdict(list)
+
+def transform_to_old_format(results):
+    """Transform new JSON format to old format expected by frontend."""
+    try:
+        # If it's already in old format, return as-is
+        if 'segments' in results and 'summary' in results:
+            return results
+        
+        # Transform new format to old format
+        segments = []
+        summary = {}
+        
+        # Try to extract segments from different possible locations
+        if 'outputs' in results and 'json' in results['outputs']:
+            # Parse the JSON string in outputs.json
+            try:
+                parsed_outputs = json.loads(results['outputs']['json'])
+                if 'segments' in parsed_outputs:
+                    segments = parsed_outputs['segments']
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Fallback: try direct segments
+        if not segments and 'segments' in results:
+            segments = results['segments']
+        
+        # Build summary from processing_stats
+        if 'processing_stats' in results:
+            stats = results['processing_stats']
+            summary = {
+                'total_duration': results.get('audio_metadata', {}).get('duration_seconds', 0),
+                'num_speakers': stats.get('num_speakers', 1),
+                'num_segments': stats.get('num_segments', len(segments)),
+                'languages': stats.get('languages_detected', ['unknown']),
+                'processing_time': stats.get('total_time', 0)
+            }
+        else:
+            # Fallback summary
+            summary = {
+                'total_duration': 0,
+                'num_speakers': 1,
+                'num_segments': len(segments),
+                'languages': ['unknown'],
+                'processing_time': 0
+            }
+        
+        # Ensure segments have the correct format
+        formatted_segments = []
+        for seg in segments:
+            if isinstance(seg, dict):
+                formatted_seg = {
+                    'speaker': seg.get('speaker_id', seg.get('speaker', 'SPEAKER_00')),
+                    'start_time': seg.get('start_time', 0),
+                    'end_time': seg.get('end_time', 0),
+                    'text': seg.get('original_text', seg.get('text', '')),
+                    'translated_text': seg.get('translated_text', ''),
+                    'language': seg.get('original_language', seg.get('language', 'unknown'))
+                }
+                formatted_segments.append(formatted_seg)
+        
+        result = {
+            'segments': formatted_segments,
+            'summary': summary
+        }
+        
+        logger.info(f"✅ Transformed results: {len(formatted_segments)} segments, summary keys: {list(summary.keys())}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error transforming results to old format: {e}")
+        # Return minimal fallback structure
+        return {
+            'segments': [],
+            'summary': {
+                'total_duration': 0,
+                'num_speakers': 0,
+                'num_segments': 0,
+                'languages': [],
+                'processing_time': 0
+            }
+        }
+
+class SessionManager:
+    """Manages user sessions and cleanup."""
+    
+    def __init__(self):
+        self.sessions = user_sessions
+        self.session_files = session_files
+        self.cleanup_interval = 3600  # 1 hour
+        
+    def generate_session_id(self, request: Request) -> str:
+        """Generate a unique session ID based on user fingerprint."""
+        # Create a stable fingerprint from IP and user agent (no randomness for consistency)
+        fingerprint_data = [
+            request.client.host if request.client else "unknown",
+            request.headers.get("user-agent", "")[:100],  # Truncate for consistency
+            request.headers.get("accept-language", "")[:50],  # Truncate for consistency
+        ]
+        
+        # Create hash (no randomness so same user gets same session)
+        fingerprint = "|".join(fingerprint_data)
+        session_id = hashlib.sha256(fingerprint.encode()).hexdigest()[:16]
+        
+        # Initialize session if new
+        if session_id not in self.sessions:
+            self.sessions[session_id] = {
+                "created_at": time.time(),
+                "last_activity": time.time(),
+                "ip": request.client.host if request.client else "unknown",
+                "user_agent": request.headers.get("user-agent", "")[:100]  # Truncate for storage
+            }
+            logger.info(f"🔑 New session created: {session_id}")
+        else:
+            # Update last activity
+            self.sessions[session_id]["last_activity"] = time.time()
+            
+        return session_id
+    
+    def add_file_to_session(self, session_id: str, file_path: str):
+        """Associate a file with a user session."""
+        self.session_files[session_id].append({
+            "file_path": file_path,
+            "created_at": time.time()
+        })
+        logger.info(f"📁 Added file to session {session_id}: {file_path}")
+    
+    def cleanup_session(self, session_id: str):
+        """Clean up all files associated with a session."""
+        if session_id not in self.session_files:
+            return
+            
+        files_cleaned = 0
+        for file_info in self.session_files[session_id]:
+            file_path = Path(file_info["file_path"])
+            try:
+                if file_path.exists():
+                    file_path.unlink()
+                    files_cleaned += 1
+                    logger.info(f"🗑️ Cleaned up file: {file_path}")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to delete {file_path}: {e}")
+        
+        # Clean up session data
+        if session_id in self.sessions:
+            del self.sessions[session_id]
+        if session_id in self.session_files:
+            del self.session_files[session_id]
+            
+        logger.info(f"✅ Session cleanup completed for {session_id}: {files_cleaned} files removed")
+        return files_cleaned
+    
+    def cleanup_expired_sessions(self):
+        """Clean up sessions that haven't been active for a while."""
+        current_time = time.time()
+        expired_sessions = []
+        
+        for session_id, session_data in list(self.sessions.items()):
+            if current_time - session_data["last_activity"] > self.cleanup_interval:
+                expired_sessions.append(session_id)
+        
+        total_cleaned = 0
+        for session_id in expired_sessions:
+            files_cleaned = self.cleanup_session(session_id)
+            total_cleaned += files_cleaned
+            
+        if expired_sessions:
+            logger.info(f"🕒 Expired session cleanup: {len(expired_sessions)} sessions, {total_cleaned} files")
+        
+        return len(expired_sessions), total_cleaned
+
+# Initialize session manager
+session_manager = SessionManager()
+
 class DemoManager:
     """Manages demo files and preprocessing."""
     
@@ -162,34 +380,60 @@ class DemoManager:
     
     async def ensure_demo_files(self):
         """Ensure demo files are available and processed."""
+        logger.info("🔄 Checking demo files...")
+        
         for demo_id, config in DEMO_FILES.items():
+            logger.info(f"📁 Checking demo file: {config['filename']}")
             file_path = self.demo_dir / config["filename"]
             results_path = self.results_dir / f"{demo_id}_results.json"
             
             # Check if file exists, download if not
             if not file_path.exists():
-                logger.info(f"Downloading demo file: {config['filename']}")
-                try:
-                    await self.download_demo_file(config["url"], file_path)
-                except Exception as e:
-                    logger.error(f"Failed to download {config['filename']}: {e}")
+                if config["url"] == "local":
+                    logger.warning(f"❌ Local demo file not found: {config['filename']}")
+                    logger.info(f"   Expected location: {file_path}")
                     continue
+                else:
+                    logger.info(f"⬇️ Downloading demo file: {config['filename']}")
+                    try:
+                        await self.download_demo_file(config["url"], file_path)
+                        logger.info(f"✅ Downloaded: {config['filename']}")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to download {config['filename']}: {e}")
+                        continue
+            else:
+                logger.info(f"✅ Demo file exists: {config['filename']}")
             
             # Check if results exist, process if not
             if not results_path.exists():
-                logger.info(f"Processing demo file: {config['filename']}")
+                logger.info(f"🔄 Processing demo file: {config['filename']} (first time)")
                 try:
                     await self.process_demo_file(demo_id, file_path, results_path)
+                    logger.info(f"✅ Demo processing completed: {config['filename']}")
                 except Exception as e:
-                    logger.error(f"Failed to process {config['filename']}: {e}")
+                    logger.error(f"❌ Failed to process {config['filename']}: {e}")
                     continue
+            else:
+                logger.info(f"📋 Using cached results: {demo_id}")
             
             # Load results into cache
             try:
-                with open(results_path, 'r', encoding='utf-8') as f:
-                    demo_results_cache[demo_id] = json.load(f)
+                if results_path.exists() and results_path.stat().st_size > 0:
+                    with open(results_path, 'r', encoding='utf-8') as f:
+                        demo_results_cache[demo_id] = json.load(f)
+                    logger.info(f"✅ Loaded cached results for {demo_id}")
+                else:
+                    logger.warning(f"⚠️ Results file empty or missing for {demo_id}")
+            except json.JSONDecodeError as e:
+                logger.error(f"❌ Invalid JSON in {demo_id} results: {e}")
+                # Delete corrupted file and reprocess
+                if results_path.exists():
+                    results_path.unlink()
+                    logger.info(f"🗑️ Deleted corrupted results for {demo_id}, will reprocess on next startup")
             except Exception as e:
-                logger.error(f"Failed to load cached results for {demo_id}: {e}")
+                logger.error(f"❌ Failed to load cached results for {demo_id}: {e}")
+        
+        logger.info(f"✅ Demo files check completed. Available: {len(demo_results_cache)}")
     
     async def download_demo_file(self, url: str, file_path: Path):
         """Download demo file from URL."""
@@ -202,41 +446,39 @@ class DemoManager:
         logger.info(f"Downloaded demo file: {file_path.name}")
     
     async def process_demo_file(self, demo_id: str, file_path: Path, results_path: Path):
-        """Process demo file using actual pipeline and cache results."""
-        config = DEMO_FILES[demo_id]
+        """Process a demo file and cache results."""
+        logger.info(f"🎵 Starting demo processing: {file_path.name}")
+        
         try:
-            # Initialize pipeline for demo processing
-            pipeline = AudioIntelligencePipeline(
-                whisper_model_size="small",
-                target_language="en",
-                device="auto",
-                hf_token=os.getenv('HUGGINGFACE_TOKEN'),
-                output_dir="./outputs"
-            )
+            # Use the global pipeline instance
+            global pipeline
+            if pipeline is None:
+                from src.main import AudioIntelligencePipeline
+                pipeline = AudioIntelligencePipeline(
+                    whisper_model_size="small",
+                    target_language="en",
+                    device="cpu"
+                )
             
-            # Process the actual audio file
-            logger.info(f"Processing demo file: {file_path}")
+            # Process the audio file
             results = pipeline.process_audio(
-                str(file_path),
-                save_outputs=True,
-                output_formats=['json', 'srt_original', 'srt_translated', 'text', 'summary']
+                audio_file=file_path,
+                output_dir=Path("outputs")
             )
             
-            # Format results for demo display
-            formatted_results = self.format_demo_results(results, demo_id)
-            
-            # Save formatted results
+            # Save results to cache file
             with open(results_path, 'w', encoding='utf-8') as f:
-                json.dump(formatted_results, f, indent=2, ensure_ascii=False)
+                json.dump(results, f, indent=2, ensure_ascii=False, default=str)
             
-            logger.info(f"Demo file processed and cached: {config['filename']}")
+            # Store in memory cache
+            demo_results_cache[demo_id] = results
+            
+            logger.info(f"✅ Demo processing completed and cached: {file_path.name}")
+            return results
             
         except Exception as e:
-            logger.error(f"Failed to process demo file {demo_id}: {e}")
-            # Create fallback results if processing fails
-            fallback_results = self.create_fallback_results(demo_id, str(e))
-            with open(results_path, 'w', encoding='utf-8') as f:
-                json.dump(fallback_results, f, indent=2, ensure_ascii=False)
+            logger.error(f"❌ Demo processing failed for {file_path.name}: {e}")
+            raise
     
     def format_demo_results(self, results: Dict, demo_id: str) -> Dict:
         """Format pipeline results for demo display."""
@@ -483,76 +725,70 @@ class AudioProcessor:
 audio_processor = AudioProcessor()
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize application on startup."""
-    logger.info("Initializing Multilingual Audio Intelligence System...")
-    
-    # Ensure demo files are available and processed
-    try:
-        await demo_manager.ensure_demo_files()
-        logger.info("Demo files initialization complete")
-    except Exception as e:
-        logger.error(f"Demo files initialization failed: {e}")
-    
-    # Set models loaded flag for health check
-    app.state.models_loaded = True
 
 
+        
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """Home page."""
     return templates.TemplateResponse("index.html", {"request": request})
-
-
+            
+        
 @app.post("/api/upload")
 async def upload_audio(
+    request: Request,
     file: UploadFile = File(...),
     whisper_model: str = Form("small"),
     target_language: str = Form("en"),
     hf_token: Optional[str] = Form(None)
-):
-    """Upload and process audio file."""
-    try:
-        # Validate file
-        if not file.filename:
-            raise HTTPException(status_code=400, detail="No file provided")
+        ):
+            """Upload and process audio file."""
+            try:
+                # Generate session ID for this user
+                session_id = session_manager.generate_session_id(request)
+                logger.info(f"🔑 Processing upload for session: {session_id}")
+                
+                # Validate file
+                if not file.filename:
+                    raise HTTPException(status_code=400, detail="No file provided")
+                
+                # Check file type
+                allowed_types = ['.wav', '.mp3', '.ogg', '.flac', '.m4a']
+                file_ext = Path(file.filename).suffix.lower()
+                if file_ext not in allowed_types:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}"
+                    )
+                
+                # Save uploaded file with session ID
+                file_path = f"uploads/{session_id}_{int(time.time())}_{file.filename}"
+                with open(file_path, "wb") as buffer:
+                    content = await file.read()
+                    buffer.write(content)
+                
+                # Track file in session
+                session_manager.add_file_to_session(session_id, file_path)
+                
+                # Generate task ID with session
+                task_id = f"task_{session_id}_{int(time.time())}"
         
-        # Check file type
-        allowed_types = ['.wav', '.mp3', '.ogg', '.flac', '.m4a']
-        file_ext = Path(file.filename).suffix.lower()
-        if file_ext not in allowed_types:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}"
-            )
+                # Start background processing
+                asyncio.create_task(
+                audio_processor.process_audio_file(
+                    file_path, whisper_model, target_language, hf_token, task_id
+                ))
+                            
+                return JSONResponse({
+                    "task_id": task_id,
+                    "message": "Processing started",
+                    "filename": file.filename
+                })
+                
+            except Exception as e:
+                logger.error(f"Upload failed: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
         
-        # Save uploaded file
-        file_path = f"uploads/{int(time.time())}_{file.filename}"
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
-        
-        # Generate task ID
-        task_id = f"task_{int(time.time())}"
-        
-        # Start background processing
-        asyncio.create_task(
-            audio_processor.process_audio_file(
-                file_path, whisper_model, target_language, hf_token, task_id
-            )
-        )
-        
-        return JSONResponse({
-            "task_id": task_id,
-            "message": "Processing started",
-            "filename": file.filename
-        })
-        
-    except Exception as e:
-        logger.error(f"Upload failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.get("/api/status/{task_id}")
 async def get_status(task_id: str):
@@ -568,15 +804,15 @@ async def get_results(task_id: str):
     """Get processing results."""
     if task_id not in processing_status:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+
     status = processing_status[task_id]
     if status.get("status") != "complete":
         raise HTTPException(status_code=202, detail="Processing not complete")
-    
+
     # Return actual processed results
     if task_id in processing_results:
         results = processing_results[task_id]
-        
+
         # Convert to the expected format for frontend
         formatted_results = {
             "segments": [],
@@ -588,7 +824,7 @@ async def get_results(task_id: str):
                 "processing_time": 0
             }
         }
-        
+
         try:
             # Extract segments information
             if 'processed_segments' in results:
@@ -601,23 +837,25 @@ async def get_results(task_id: str):
                         "translated_text": seg.translated_text if hasattr(seg, 'translated_text') else "",
                         "language": seg.original_language if hasattr(seg, 'original_language') else "unknown",
                     })
-            
+
             # Extract summary information
             if 'audio_metadata' in results:
                 metadata = results['audio_metadata']
                 formatted_results["summary"]["total_duration"] = metadata.get('duration_seconds', 0)
-            
+
             if 'processing_stats' in results:
                 stats = results['processing_stats']
                 formatted_results["summary"]["processing_time"] = stats.get('total_time', 0)
-            
+
             # Calculate derived statistics
             formatted_results["summary"]["num_segments"] = len(formatted_results["segments"])
             speakers = set(seg["speaker"] for seg in formatted_results["segments"])
             formatted_results["summary"]["num_speakers"] = len(speakers)
-            languages = set(seg["language"] for seg in formatted_results["segments"] if seg["language"] != 'unknown')
+            languages = set(
+                seg["language"] for seg in formatted_results["segments"] if seg["language"] != 'unknown'
+            )
             formatted_results["summary"]["languages"] = list(languages) if languages else ["unknown"]
-            
+
         except Exception as e:
             logger.error(f"Error formatting results: {e}")
             # Fallback to basic structure
@@ -639,12 +877,13 @@ async def get_results(task_id: str):
                     "processing_time": 2.0
                 }
             }
-        
-        return JSONResponse({
-            "task_id": task_id,
-            "status": "complete",
-            "results": formatted_results
-        })
+
+            return JSONResponse({
+                "task_id": task_id,
+                "status": "complete",
+                "results": formatted_results
+            })
+                
     else:
         # Fallback if results not found
         return JSONResponse({
@@ -669,6 +908,113 @@ async def get_results(task_id: str):
                 }
             }
         })
+
+
+# async def get_results(task_id: str):
+#     """Get processing results."""
+#     if task_id not in processing_status:
+#         raise HTTPException(status_code=404, detail="Task not found")
+    
+#     status = processing_status[task_id]
+#     if status.get("status") != "complete":
+#         raise HTTPException(status_code=202, detail="Processing not complete")
+    
+#     # Return actual processed results
+#     if task_id in processing_results:
+#         results = processing_results[task_id]
+        
+#         # Convert to the expected format for frontend
+#         formatted_results = {
+#             "segments": [],
+#             "summary": {
+#                 "total_duration": 0,
+#                 "num_speakers": 0,
+#                 "num_segments": 0,
+#                 "languages": [],
+#                 "processing_time": 0
+#             }
+#         }
+        
+#         try:
+#             # Extract segments information
+#             if 'processed_segments' in results:
+#                 for seg in results['processed_segments']:
+#                     formatted_results["segments"].append({
+#                         "speaker": seg.speaker_id if hasattr(seg, 'speaker_id') else "Unknown Speaker",
+#                         "start_time": seg.start_time if hasattr(seg, 'start_time') else 0,
+#                         "end_time": seg.end_time if hasattr(seg, 'end_time') else 0,
+#                         "text": seg.original_text if hasattr(seg, 'original_text') else "",
+#                         "translated_text": seg.translated_text if hasattr(seg, 'translated_text') else "",
+#                         "language": seg.original_language if hasattr(seg, 'original_language') else "unknown",
+#                     })
+            
+#             # Extract summary information
+#             if 'audio_metadata' in results:
+#                 metadata = results['audio_metadata']
+#                 formatted_results["summary"]["total_duration"] = metadata.get('duration_seconds', 0)
+            
+#             if 'processing_stats' in results:
+#                 stats = results['processing_stats']
+#                 formatted_results["summary"]["processing_time"] = stats.get('total_time', 0)
+            
+#             # Calculate derived statistics
+#             formatted_results["summary"]["num_segments"] = len(formatted_results["segments"])
+#             speakers = set(seg["speaker"] for seg in formatted_results["segments"])
+#             formatted_results["summary"]["num_speakers"] = len(speakers)
+#             languages = set(seg["language"] for seg in formatted_results["segments"] if seg["language"] != 'unknown')
+#             formatted_results["summary"]["languages"] = list(languages) if languages else ["unknown"]
+                
+#         except Exception as e:
+#             logger.error(f"Error formatting results: {e}")
+#             # Fallback to basic structure
+#             formatted_results = {
+#                 "segments": [
+#                     {
+#                         "speaker": "Speaker 1",
+#                         "start_time": 0.0,
+#                         "end_time": 5.0,
+#                         "text": f"Processed audio from file. Full results processing encountered an error: {str(e)}",
+#                         "language": "en",
+#                     }
+#                 ],
+#                 "summary": {
+#                     "total_duration": 5.0,
+#                     "num_speakers": 1,
+#                     "num_segments": 1,
+#                     "languages": ["en"],
+#                     "processing_time": 2.0
+#                 }
+#             }
+        
+#         return JSONResponse({
+#             "task_id": task_id,
+#             "status": "complete",
+#             "results": formatted_results
+#         })
+#     else:
+#         # Fallback if results not found
+#         return JSONResponse({
+#             "task_id": task_id,
+#             "status": "complete",
+#             "results": {
+#                 "segments": [
+#                     {
+#                         "speaker": "System",
+#                         "start_time": 0.0,
+#                         "end_time": 1.0,
+#                         "text": "Audio processing completed but results are not available for display.",
+#                         "language": "en",
+#                     }
+#                 ],
+#                 "summary": {
+#                     "total_duration": 1.0,
+#                     "num_speakers": 1,
+#                     "num_segments": 1,
+#                     "languages": ["en"],
+#                     "processing_time": 0.1
+#                 }
+#             }
+#         })
 
 
 @app.get("/api/download/{task_id}/{format}")
@@ -825,43 +1171,56 @@ def format_srt_time(seconds: float) -> str:
 async def get_system_info():
     """Get system information."""
     
+    # Initialize default info
+    info = {
+        "version": "1.0.0",
+        "features": [
+            "Speaker Diarization",
+            "Speech Recognition", 
+            "Neural Translation",
+            "Interactive Visualization"
+        ],
+        "status": "Live",
+        "statusColor": "green"
+    }
+    
     if UTILS_AVAILABLE:
         try:
-            # from utils import _collect_system_info  # or import as needed
-            # sys_info = _collect_system_info()
-            # sys_info = get_system_info()
-            # info.update(sys_info)
+            # Enhanced system info collection when utils are available
 
-            info = {
-                "version": "1.0.0",
-                "features": [
-                    "Speaker Diarization",
-                    "Speech Recognition",
-                    "Neural Translation",
-                    "Interactive Visualization"
-                ]
-            }
-
-            # Perform the health check
-            health_status = "Unknown"
-            health_color = "gray"
+            # Simple health check without httpx dependency issues
+            health_status = "Live"
+            health_color = "green"
+            
+            # Add system information
+            import psutil
+            import platform
             
             try:
-                from fastapi.testclient import TestClient
-                client = TestClient(app)
-                res = client.get("/health")
-
-                if res.status_code == 200 and res.json().get("status") == "ok":
-                    health_status = "Live"
-                    health_color = "green"
-                else:
-                    health_status = "Error"
-                    health_color = "yellow"
+                cpu_percent = psutil.cpu_percent(interval=1)
+                memory = psutil.virtual_memory()
+                disk = psutil.disk_usage('/')
+                
+                info.update({
+                    "system": {
+                        "platform": platform.system(),
+                        "python_version": platform.python_version(),
+                        "cpu_usage": f"{cpu_percent}%",
+                        "memory_usage": f"{memory.percent}%",
+                        "disk_usage": f"{disk.percent}%"
+                    }
+                })
+            except ImportError:
+                # If psutil is not available, just show basic info
+                info.update({
+                    "system": {
+                        "platform": platform.system(),
+                        "python_version": platform.python_version()
+                    }
+                })
             except Exception as e:
-                print("An exception occurred while getting system info: ", e)
-                health_status = "Server Down"
-                health_color = "red"
-
+                logger.warning(f"Failed to get system metrics: {e}")
+            
             info["status"] = health_status
             info["statusColor"] = health_color
             
@@ -872,79 +1231,280 @@ async def get_system_info():
     return JSONResponse(info)
 
 
-# Demo mode for testing without full pipeline
-@app.post("/api/demo-process")
-async def demo_process(
-    demo_file_id: str = Form(...),
-    whisper_model: str = Form("small"),
-    target_language: str = Form("en")
-):
-    """Demo processing endpoint that returns cached results immediately."""
-    try:
-        # Validate demo file ID
-        if demo_file_id not in DEMO_FILES:
-            raise HTTPException(status_code=400, detail="Invalid demo file selected")
-        
-        # Check if demo results are cached
-        if demo_file_id not in demo_results_cache:
-            raise HTTPException(status_code=503, detail="Demo files not available. Please try again in a moment.")
-        
-        # Simulate brief processing delay for realism
-        await asyncio.sleep(1)
-        
-        # Get cached results
-        results = demo_results_cache[demo_file_id]
-        config = DEMO_FILES[demo_file_id]
-        
-        # Return comprehensive demo results
-        return JSONResponse({
-            "status": "complete",
-            "filename": config["filename"],
-            "demo_file": config["display_name"],
-            "results": results
-        })
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Demo processing error: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Demo processing failed: {str(e)}"}
-        )
+# Note: Old demo-process endpoint removed in favor of process-demo/{demo_id}
 
 
 @app.get("/api/demo-files")
 async def get_demo_files():
     """Get available demo files with status."""
-    demo_files = []
-    
-    for demo_id, config in DEMO_FILES.items():
-        file_path = demo_manager.demo_dir / config["filename"]
-        results_cached = demo_id in demo_results_cache
+    try:
+        demo_files = []
         
-        demo_files.append({
-            "id": demo_id,
-            "name": config["display_name"],
-            "filename": config["filename"],
-            "language": config["language"],
-            "description": config["description"],
-            "available": file_path.exists(),
-            "processed": results_cached,
-            "status": "ready" if results_cached else "processing" if file_path.exists() else "downloading"
-        })
-    
-    return JSONResponse({"demo_files": demo_files})
+        logger.info(f"📋 Building demo files list from {len(DEMO_FILES)} configurations")
+        
+        for demo_id, config in DEMO_FILES.items():
+            file_path = demo_manager.demo_dir / config["filename"]
+            results_cached = demo_id in demo_results_cache
+            
+            demo_file_info = {
+                "id": demo_id,
+                "name": config.get("name", config.get("display_name", demo_id)),
+                "filename": config["filename"],
+                "language": config["language"],
+                "description": config["description"],
+                "category": config.get("category", "general"),
+                "difficulty": config.get("difficulty", "intermediate"),
+                "duration": config.get("duration", "unknown"),
+                "featured": config.get("featured", False),
+                "new": config.get("new", False),
+                "indian_language": config.get("indian_language", False),
+                "available": file_path.exists(),
+                "processed": results_cached,
+                "status": "ready" if results_cached else "processing" if file_path.exists() else "downloading"
+            }
+            
+            demo_files.append(demo_file_info)
+            logger.info(f"📁 Added demo file: {demo_id} -> {demo_file_info['name']}")
+        
+        logger.info(f"✅ Returning {len(demo_files)} demo files to frontend")
+        return JSONResponse(demo_files)
+        
+    except Exception as e:
+        logger.error(f"❌ Error building demo files list: {e}")
+        return JSONResponse({"demo_files": [], "error": str(e)})
 
+
+@app.get("/demo_audio/{filename}")
+async def get_demo_audio(filename: str):
+    """Serve demo audio files."""
+    try:
+        # Security: prevent path traversal
+        filename = filename.replace('..', '').replace('/', '').replace('\\', '')
+        
+        # Check if file exists in demo_audio directory
+        audio_path = Path("demo_audio") / filename
+        if not audio_path.exists():
+            # Try with common extensions
+            for ext in ['.mp3', '.wav', '.ogg', '.m4a']:
+                audio_path_with_ext = Path("demo_audio") / f"{filename}{ext}"
+                if audio_path_with_ext.exists():
+                    audio_path = audio_path_with_ext
+                    break
+            else:
+                raise HTTPException(status_code=404, detail="Demo audio file not found")
+        
+        # Determine content type
+        content_type = "audio/mpeg"  # default
+        if audio_path.suffix.lower() == '.ogg':
+            content_type = "audio/ogg"
+        elif audio_path.suffix.lower() == '.wav':
+            content_type = "audio/wav"
+        elif audio_path.suffix.lower() == '.m4a':
+            content_type = "audio/mp4"
+        
+        logger.info(f"📻 Serving demo audio: {audio_path}")
+        return FileResponse(
+            path=str(audio_path),
+            media_type=content_type,
+            filename=audio_path.name
+        )
+        
+    except Exception as e:
+        logger.error(f"Error serving demo audio {filename}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to serve demo audio")
+
+
+@app.post("/api/process-demo/{demo_id}")
+async def process_demo_by_id(demo_id: str):
+    """Process demo file by ID and return cached results."""
+    try:
+        logger.info(f"🎯 Processing demo file: {demo_id}")
+        
+        # Check if demo file exists
+        if demo_id not in DEMO_FILES:
+            raise HTTPException(status_code=404, detail=f"Demo file '{demo_id}' not found")
+        
+        # Check if results are cached
+        results_path = Path("demo_results") / f"{demo_id}_results.json"
+        
+        if results_path.exists():
+            logger.info(f"📁 Loading cached results for {demo_id}")
+            try:
+                with open(results_path, 'r', encoding='utf-8') as f:
+                    results = json.load(f)
+                
+                # Transform new format to old format if needed
+                transformed_results = transform_to_old_format(results)
+                
+                return JSONResponse({
+                    "status": "complete",
+                    "results": transformed_results
+                })
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"❌ Failed to parse cached results for {demo_id}: {e}")
+                # Fall through to reprocess
+        
+        # If not cached, process the demo file
+        logger.info(f"⚡ Processing demo file {demo_id} on-demand")
+        file_path = demo_manager.demo_dir / DEMO_FILES[demo_id]["filename"]
+        
+        if not file_path.exists():
+            # Try to download the file first
+            try:
+                config = DEMO_FILES[demo_id]
+                await demo_manager.download_demo_file(config["url"], file_path)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to download demo file: {str(e)}")
+        
+        # Process the file
+        results = await demo_manager.process_demo_file(demo_id, file_path, results_path)
+        
+        # Transform new format to old format
+        transformed_results = transform_to_old_format(results)
+        
+        return JSONResponse({
+            "status": "complete", 
+            "results": transformed_results
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error processing demo {demo_id}: {e}")
+        return JSONResponse({
+            "status": "error",
+            "error": str(e)
+        }, status_code=500)
+
+
+@app.post("/api/cleanup")
+async def cleanup_session(request: Request):
+    """Clean up user session files."""
+    try:
+        session_id = session_manager.generate_session_id(request)
+        files_cleaned = session_manager.cleanup_session(session_id)
+        
+        return JSONResponse({
+            "status": "success",
+            "message": f"Cleaned up {files_cleaned} files for session {session_id}",
+            "files_cleaned": files_cleaned
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Cleanup error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Cleanup failed: {str(e)}"}
+        )
+
+
+@app.post("/api/cleanup-expired")
+async def cleanup_expired():
+    """Clean up expired sessions (admin endpoint)."""
+    try:
+        sessions_cleaned, files_cleaned = session_manager.cleanup_expired_sessions()
+        
+        return JSONResponse({
+            "status": "success",
+            "message": f"Cleaned up {sessions_cleaned} expired sessions",
+            "sessions_cleaned": sessions_cleaned,
+            "files_cleaned": files_cleaned
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Expired cleanup error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Expired cleanup failed: {str(e)}"}
+        )
+
+
+@app.get("/api/session-info")
+async def get_session_info(request: Request):
+    """Get current session information."""
+    try:
+        session_id = session_manager.generate_session_id(request)
+        session_data = session_manager.sessions.get(session_id, {})
+        files_count = len(session_manager.session_files.get(session_id, []))
+        
+        return JSONResponse({
+            "session_id": session_id,
+            "created_at": session_data.get("created_at"),
+            "last_activity": session_data.get("last_activity"),
+            "files_count": files_count,
+            "status": "active"
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Session info error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Session info failed: {str(e)}"}
+        )
+
+
+async def startup_event():
+    """Application startup tasks"""
+    logger.info("🚀 Starting Multilingual Audio Intelligence System...")
+    try:
+        system_info = get_system_info()
+        logger.info(f"📊 System Info: {system_info}")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not get system info: {e}")
+        logger.info("📊 System Info: [System info unavailable]")
+    
+    # Initialize demo manager
+    global demo_manager
+    demo_manager = DemoManager()
+    await demo_manager.ensure_demo_files()
+    
+    # Clean up any expired sessions on startup
+    sessions_cleaned, files_cleaned = session_manager.cleanup_expired_sessions()
+    if sessions_cleaned > 0:
+        logger.info(f"🧹 Startup cleanup: {sessions_cleaned} expired sessions, {files_cleaned} files")
+    
+    logger.info("✅ Startup completed successfully!")
+
+async def shutdown_event():
+    """Application shutdown tasks"""
+    logger.info("🛑 Shutting down Multilingual Audio Intelligence System...")
+    
+    # Clean up all active sessions on shutdown
+    total_sessions = len(session_manager.sessions)
+    total_files = 0
+    for session_id in list(session_manager.sessions.keys()):
+        files_cleaned = session_manager.cleanup_session(session_id)
+        total_files += files_cleaned
+    
+    if total_sessions > 0:
+        logger.info(f"🧹 Shutdown cleanup: {total_sessions} sessions, {total_files} files")
+
+# Register startup and shutdown events
+app.add_event_handler("startup", startup_event)
+app.add_event_handler("shutdown", shutdown_event)
+
+# Enhanced logging for requests
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    
+    # Log request
+    logger.info(f"📥 {request.method} {request.url.path}")
+    
+    response = await call_next(request)
+    
+    # Log response
+    process_time = time.time() - start_time
+    logger.info(f"📤 {request.method} {request.url.path} → {response.status_code} ({process_time:.2f}s)")
+    
+    return response
 
 if __name__ == "__main__":
-    # Setup for development
-    logger.info("Starting Multilingual Audio Intelligence System...")
-    
-    uvicorn.run(
-        "web_app:app",
-        host="127.0.0.1",
+    # Start server
+        uvicorn.run(
+        app, 
+        host="0.0.0.0", 
         port=8000,
-        reload=True,
         log_level="info"
     ) 

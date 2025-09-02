@@ -1,25 +1,33 @@
 FROM python:3.9-slim
 
+# Set working directory
 WORKDIR /app
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
     wget \
     curl \
+    build-essential \
+    libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy requirements first for better caching
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
+# Copy application code
 COPY . .
 
-# Create necessary directories & fix permissions
-RUN mkdir -p templates static uploads outputs model_cache temp_files demo_results \
-    && chmod -R 777 templates static uploads outputs model_cache temp_files demo_results
+# Create necessary directories with proper permissions
+RUN mkdir -p templates static uploads outputs model_cache temp_files demo_results demo_audio \
+    && chmod -R 755 templates static uploads outputs model_cache temp_files demo_results demo_audio
 
-# Environment variables
+# Set environment variables for Hugging Face Spaces
 ENV PYTHONPATH=/app \
     GRADIO_ANALYTICS_ENABLED=False \
     HF_MODELS_CACHE=/app/model_cache \
@@ -34,12 +42,16 @@ ENV PYTHONPATH=/app \
     TORCH_HOME=/app/model_cache \
     XDG_CACHE_HOME=/app/model_cache \
     PYANNOTE_CACHE=/app/model_cache \
-    MPLCONFIGDIR=/tmp/matplotlib
+    MPLCONFIGDIR=/tmp/matplotlib \
+    HUGGINGFACE_HUB_CACHE=/app/model_cache \
+    HF_HUB_CACHE=/app/model_cache
 
-
+# Expose port for Hugging Face Spaces
 EXPOSE 7860
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+# Health check for Hugging Face Spaces
+HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:7860/api/system-info || exit 1
 
-CMD ["python", "-c", "import subprocess; subprocess.run(['python', 'model_preloader.py']); import uvicorn; uvicorn.run('web_app:app', host='0.0.0.0', reload=True, port=7860, workers=2)"]
+# Preload models and start the application
+CMD ["python", "-c", "import subprocess; import time; print('🚀 Starting Enhanced Multilingual Audio Intelligence System...'); subprocess.run(['python', 'model_preloader.py']); print('✅ Models loaded successfully'); import uvicorn; uvicorn.run('web_app:app', host='0.0.0.0', port=7860, workers=1, log_level='info')"]

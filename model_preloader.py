@@ -63,7 +63,7 @@ class ModelPreloader:
                 "size_mb": 32
             },
             "whisper_small": {
-                "name": "small",
+                "name": "openai/whisper-small",
                 "type": "whisper", 
                 "description": "Whisper Speech Recognition (Small)",
                 "size_mb": 484
@@ -74,6 +74,7 @@ class ModelPreloader:
                 "description": "mBART Neural Machine Translation",
                 "size_mb": 2440
             },
+            # Common language models
             "opus_mt_ja_en": {
                 "name": "Helsinki-NLP/opus-mt-ja-en",
                 "type": "opus_mt",
@@ -90,6 +91,73 @@ class ModelPreloader:
                 "name": "Helsinki-NLP/opus-mt-fr-en",
                 "type": "opus_mt", 
                 "description": "French to English Translation",
+                "size_mb": 303
+            },
+            # Enhanced Indian language models
+            "opus_mt_hi_en": {
+                "name": "Helsinki-NLP/opus-mt-hi-en",
+                "type": "opus_mt",
+                "description": "Hindi to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_ta_en": {
+                "name": "Helsinki-NLP/opus-mt-ta-en",
+                "type": "opus_mt",
+                "description": "Tamil to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_bn_en": {
+                "name": "Helsinki-NLP/opus-mt-bn-en",
+                "type": "opus_mt",
+                "description": "Bengali to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_te_en": {
+                "name": "Helsinki-NLP/opus-mt-te-en",
+                "type": "opus_mt",
+                "description": "Telugu to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_mr_en": {
+                "name": "Helsinki-NLP/opus-mt-mr-en",
+                "type": "opus_mt",
+                "description": "Marathi to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_gu_en": {
+                "name": "Helsinki-NLP/opus-mt-gu-en",
+                "type": "opus_mt",
+                "description": "Gujarati to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_kn_en": {
+                "name": "Helsinki-NLP/opus-mt-kn-en",
+                "type": "opus_mt",
+                "description": "Kannada to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_pa_en": {
+                "name": "Helsinki-NLP/opus-mt-pa-en",
+                "type": "opus_mt",
+                "description": "Punjabi to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_ml_en": {
+                "name": "Helsinki-NLP/opus-mt-ml-en",
+                "type": "opus_mt",
+                "description": "Malayalam to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_ne_en": {
+                "name": "Helsinki-NLP/opus-mt-ne-en",
+                "type": "opus_mt",
+                "description": "Nepali to English Translation",
+                "size_mb": 303
+            },
+            "opus_mt_ur_en": {
+                "name": "Helsinki-NLP/opus-mt-ur-en",
+                "type": "opus_mt",
+                "description": "Urdu to English Translation",
                 "size_mb": 303
             }
         }

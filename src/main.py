@@ -28,11 +28,12 @@ import logging
 import argparse
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Union, Dict, List, Optional, Any
 import json
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Add current directory to path for imports
+current_dir = os.path.dirname(__file__)
+sys.path.insert(0, current_dir)
 
 # Import all our modules
 from audio_processor import AudioProcessor
@@ -40,11 +41,14 @@ from speaker_diarizer import SpeakerDiarizer, SpeakerSegment
 from speech_recognizer import SpeechRecognizer, TranscriptionSegment
 from translator import NeuralTranslator, TranslationResult
 from output_formatter import OutputFormatter, ProcessedSegment
+from speaker_verifier import SpeakerVerifier  # New PS-6 module
+from noise_reduction import NoiseReducer  # New PS-6 module
 from utils import (
     performance_monitor, ProgressTracker, validate_audio_file,
     get_system_info, format_duration, ensure_directory, get_file_info,
     safe_filename
 )
+from quality_control import quality_controller
 
 # Configure logging
 logging.basicConfig(
@@ -94,15 +98,27 @@ class AudioIntelligencePipeline:
         self.translator = None
         self.output_formatter = None
         
+        # PS-6 specific components
+        self.speaker_verifier = None
+        self.noise_reducer = None
+        
         # Performance tracking
         self.total_processing_time = 0
         self.component_times = {}
+        
+        # Quality control settings
+        self.demo_mode = False
         
         logger.info(f"Initialized AudioIntelligencePipeline:")
         logger.info(f"  - Whisper model: {whisper_model_size}")
         logger.info(f"  - Target language: {target_language}")
         logger.info(f"  - Device: {device or 'auto'}")
         logger.info(f"  - Output directory: {self.output_dir}")
+    
+    def enable_demo_mode(self, enabled: bool = True):
+        """Enable demo mode with quality filtering."""
+        self.demo_mode = enabled
+        logger.info(f"Demo mode: {'enabled' if enabled else 'disabled'}")
     
     def _initialize_components(self):
         """Lazy initialization of pipeline components."""
@@ -125,32 +141,54 @@ class AudioIntelligencePipeline:
             )
         
         if self.translator is None:
-            logger.info("Initializing NeuralTranslator...")
+            logger.info("Initializing Enhanced NeuralTranslator...")
             self.translator = NeuralTranslator(
                 target_language=self.target_language,
-                device=self.device
+                device=self.device,
+                enable_google_api=True,  # Enable 3-tier hybrid system
+                google_api_key=None  # Use free alternatives
             )
         
         if self.output_formatter is None:
             self.output_formatter = OutputFormatter()
+        
+        # Initialize PS-6 specific components
+        if self.speaker_verifier is None:
+            logger.info("Initializing SpeakerVerifier...")
+            self.speaker_verifier = SpeakerVerifier(
+                device=self.device,
+                cache_dir=str(self.output_dir / "model_cache")
+            )
+        
+        if self.noise_reducer is None:
+            logger.info("Initializing NoiseReducer...")
+            self.noise_reducer = NoiseReducer(
+                device=self.device,
+                cache_dir=str(self.output_dir / "model_cache")
+            )
     
     def process_audio(self, 
-                     audio_input: str,
+                     audio_file: Union[str, Path],
+                     output_dir: Path = None,
                      save_outputs: bool = True,
                      output_formats: List[str] = None) -> Dict[str, Any]:
         """
         Process audio file through complete pipeline.
         
         Args:
-            audio_input (str): Path to input audio file
+            audio_file (Union[str, Path]): Path to input audio file
+            output_dir (Path, optional): Output directory for results
             save_outputs (bool): Whether to save outputs to files
             output_formats (List[str], optional): Formats to generate
             
         Returns:
             Dict[str, Any]: Complete processing results and metadata
         """
+        if output_dir is None:
+            output_dir = self.output_dir
+            
         start_time = time.time()
-        audio_path = Path(audio_input)
+        audio_path = Path(audio_file)
         
         if output_formats is None:
             output_formats = ['json', 'srt', 'text', 'summary']
@@ -167,13 +205,21 @@ class AudioIntelligencePipeline:
         
         try:
             # Create progress tracker
-            progress = ProgressTracker(5, f"Processing {audio_path.name}")
+            progress = ProgressTracker(6, f"Processing {audio_path.name}")
             
-            # Step 1: Audio Preprocessing
+            # Step 1: Audio Preprocessing and Noise Reduction
             progress.update()
-            logger.info("Step 1/5: Audio preprocessing...")
+            logger.info("Step 1/6: Audio preprocessing and noise reduction...")
             with performance_monitor("audio_preprocessing") as metrics:
-                processed_audio, sample_rate = self.audio_processor.process_audio(str(audio_path))
+                # Check if audio is noisy and apply enhancement if needed
+                is_noisy = self.noise_reducer.is_noisy_audio(str(audio_path))
+                if is_noisy:
+                    logger.info("Detected noisy audio, applying enhancement...")
+                    enhanced_path = self.noise_reducer.enhance_audio(str(audio_path))
+                    processed_audio, sample_rate = self.audio_processor.process_audio(enhanced_path)
+                else:
+                    processed_audio, sample_rate = self.audio_processor.process_audio(str(audio_path))
+                
                 audio_metadata = self.audio_processor.get_audio_info(str(audio_path))
             
             self.component_times['audio_preprocessing'] = metrics.duration
@@ -181,7 +227,7 @@ class AudioIntelligencePipeline:
             
             # Step 2: Speaker Diarization
             progress.update()
-            logger.info("Step 2/5: Speaker diarization...")
+            logger.info("Step 2/6: Speaker diarization...")
             with performance_monitor("speaker_diarization") as metrics:
                 speaker_segments = self.speaker_diarizer.diarize(processed_audio, sample_rate)
             
@@ -191,7 +237,7 @@ class AudioIntelligencePipeline:
             
             # Step 3: Speech Recognition
             progress.update()
-            logger.info("Step 3/5: Speech recognition...")
+            logger.info("Step 3/6: Speech recognition...")
             with performance_monitor("speech_recognition") as metrics:
                 # Convert speaker segments to format expected by speech recognizer
                 speaker_tuples = [(seg.start_time, seg.end_time, seg.speaker_id) 
@@ -207,7 +253,7 @@ class AudioIntelligencePipeline:
             
             # Step 4: Neural Machine Translation
             progress.update()
-            logger.info("Step 4/5: Neural machine translation...")
+            logger.info("Step 4/6: Neural machine translation...")
             with performance_monitor("translation") as metrics:
                 translation_results = []
                 
@@ -218,14 +264,19 @@ class AudioIntelligencePipeline:
                         language_groups[seg.language] = []
                     language_groups[seg.language].append(seg)
                 
-                # Translate each language group
+                # Translate each language group using enhanced hybrid system
                 for lang, segments in language_groups.items():
                     if lang != self.target_language:
                         texts = [seg.text for seg in segments]
-                        batch_results = self.translator.translate_batch(
-                            texts, [lang] * len(texts), self.target_language
-                        )
-                        translation_results.extend(batch_results)
+                        # Use enhanced hybrid translation for better Indian language support
+                        for text in texts:
+                            if hasattr(self.translator, 'translate_text_hybrid'):
+                                # Use new 3-tier hybrid method
+                                result = self.translator.translate_text_hybrid(text, lang, self.target_language)
+                            else:
+                                # Fallback to original method
+                                result = self.translator.translate_text(text, lang, self.target_language)
+                            translation_results.append(result)
                     else:
                         # Create identity translations for target language
                         for seg in segments:
@@ -241,14 +292,38 @@ class AudioIntelligencePipeline:
             self.component_times['translation'] = metrics.duration
             logger.info(f"Translated {len(translation_results)} text segments")
             
-            # Step 5: Output Formatting
+            # Step 5: Speaker Verification (PS-6 Enhancement)
             progress.update()
-            logger.info("Step 5/5: Output formatting...")
+            logger.info("Step 5/6: Speaker verification...")
+            with performance_monitor("speaker_verification") as metrics:
+                # Perform speaker verification for identified speakers
+                verification_results = {}
+                for speaker_id in set(seg.speaker_id for seg in speaker_segments):
+                    # Get first segment for this speaker for verification
+                    speaker_segment = next(seg for seg in speaker_segments if seg.speaker_id == speaker_id)
+                    verification = self.speaker_verifier.identify_speaker(
+                        str(audio_path), 
+                        speaker_segment.start_time, 
+                        speaker_segment.end_time
+                    )
+                    verification_results[speaker_id] = verification
+                
+                self.component_times['speaker_verification'] = metrics.duration
+                logger.info(f"Speaker verification completed for {len(verification_results)} speakers")
+            
+            # Step 6: Output Formatting
+            progress.update()
+            logger.info("Step 6/6: Output formatting...")
             with performance_monitor("output_formatting") as metrics:
                 # Combine all results into ProcessedSegment objects
                 processed_segments = self._combine_results(
                     speaker_segments, transcription_segments, translation_results
                 )
+                
+                # Apply quality filtering for demo mode
+                if hasattr(self, 'demo_mode') and self.demo_mode:
+                    processed_segments = quality_controller.filter_results_for_demo(processed_segments)
+                    logger.info("Applied demo quality filtering")
                 
                 # Generate outputs
                 self.output_formatter = OutputFormatter(audio_path.name)
@@ -282,6 +357,11 @@ class AudioIntelligencePipeline:
                     'num_segments': len(processed_segments),
                     'languages_detected': list(languages_detected),
                     'total_speech_duration': sum(seg.duration for seg in processed_segments)
+                },
+                'ps6_features': {
+                    'speaker_verification': verification_results,
+                    'noise_reduction_applied': is_noisy,
+                    'snr_estimation': self.noise_reducer.estimate_snr(str(audio_path)) if hasattr(self, 'noise_reducer') else None
                 },
                 'outputs': all_outputs,
                 'saved_files': saved_files,

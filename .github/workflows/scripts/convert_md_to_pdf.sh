@@ -10,6 +10,9 @@ find . -name "*.md" -not -path "./.git/*" | while read file; do
   pdf_path="$dir/$filename.pdf"
   
   echo "Processing $file..."
+  echo "Directory: $dir"
+  echo "Filename (without extension): $filename"
+  echo "Target PDF path: $pdf_path"
   
   if [ ! -f "$file" ]; then
     echo "ERROR: File $file does not exist"
@@ -45,7 +48,6 @@ find . -name "*.md" -not -path "./.git/*" | while read file; do
     --variable mainfont="DejaVu Sans" \
     --variable sansfont="DejaVu Sans" \
     --variable monofont="DejaVu Sans Mono" \
-    --variable geometry:top=0.5in,left=0.5in,right=0.5in,bottom=0.5in \
     --variable colorlinks=true \
     --variable linkcolor=blue \
     --variable urlcolor=blue \

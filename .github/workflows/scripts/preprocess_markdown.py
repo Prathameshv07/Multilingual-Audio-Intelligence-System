@@ -32,14 +32,16 @@ def process_mermaid_diagrams(content, file_dir):
                 result = subprocess.run([
                     'mmdc', '-i', mermaid_file, '-o', svg_file,
                     '--theme', 'default', '--backgroundColor', 'white',
-                    '--configFile', config_file
-                ], check=True, capture_output=True, text=True)
+                    '--configFile', config_file,
+                    '--puppeteerConfig', config_file
+                ], check=True, capture_output=True, text=True, timeout=60)
             else:
                 # Method 2: Try without puppeteer config (fallback)
                 result = subprocess.run([
                     'mmdc', '-i', mermaid_file, '-o', svg_file,
-                    '--theme', 'default', '--backgroundColor', 'white'
-                ], check=True, capture_output=True, text=True)
+                    '--theme', 'default', '--backgroundColor', 'white',
+                    '--puppeteerConfig', '{"args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--single-process"]}'
+                ], check=True, capture_output=True, text=True, timeout=60)
 
             # Convert SVG to PNG for better PDF compatibility
             subprocess.run([
@@ -70,8 +72,9 @@ def process_mermaid_diagrams(content, file_dir):
             try:
                 print("Trying basic mmdc command...")
                 subprocess.run([
-                    'mmdc', '-i', mermaid_file, '-o', svg_file
-                ], check=True, capture_output=True, text=True)
+                    'mmdc', '-i', mermaid_file, '-o', svg_file,
+                    '--puppeteerConfig', '{"args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--single-process"]}'
+                ], check=True, capture_output=True, text=True, timeout=60)
                 
                 # Convert to PNG
                 subprocess.run([
@@ -99,7 +102,10 @@ def process_mermaid_diagrams(content, file_dir):
                     os.remove(mermaid_file)
                 except:
                     pass
-                return f'\n```\n{mermaid_code}\n```\n'
+                
+                # Return original mermaid code if all rendering fails
+                print("All Mermaid rendering methods failed, keeping original code")
+                return f'\n```mermaid\n{mermaid_code}\n```\n'
 
         except Exception as e:
             print(f"Unexpected error with mermaid: {e}")
@@ -107,9 +113,10 @@ def process_mermaid_diagrams(content, file_dir):
                 os.remove(mermaid_file)
             except:
                 pass
-            return f'\n```\n{mermaid_code}\n```\n'
+            return f'\n```mermaid\n{mermaid_code}\n```\n'
 
     return re.sub(mermaid_pattern, replace_mermaid, content, flags=re.DOTALL)
+
 
 def clean_emojis_and_fix_images(content, file_dir):
     """Remove/replace emojis and fix image paths"""

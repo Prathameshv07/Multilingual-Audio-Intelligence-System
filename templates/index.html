@@ -6,7 +6,7 @@
     <title>Multilingual Audio Intelligence System</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <style>
         .upload-area {
             border: 2px dashed #cbd5e1;
@@ -35,7 +35,7 @@
         .page-section.active {
             display: block;
         }
-        .loading {
+        .loading-spinner {
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -45,6 +45,47 @@
         .hero-pattern {
             background-image: radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.15) 1px, transparent 0);
             background-size: 20px 20px;
+        }
+        
+        /* Scrollable demo tabs styles */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .demo-file-option {
+            transition: all 0.2s ease;
+        }
+        
+        .demo-file-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-file-option.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        .scroll-indicator {
+            transition: all 0.2s ease;
+        }
+        
+        .scroll-indicator.active {
+            background-color: #3b82f6;
+            transform: scale(1.2);
+        }
+        
+        /* Smooth scrolling for demo files */
+        #demo-files-container {
+            scroll-snap-type: x mandatory;
+        }
+        
+        .demo-file-option {
+            scroll-snap-align: start;
         }
     </style>
 </head>
@@ -252,43 +293,38 @@
             <div class="px-4 sm:px-0">
                 <div class="bg-white overflow-hidden shadow rounded-lg">
                     <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Audio File</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Select Audio File</h3>
                         
                         <form id="upload-form" enctype="multipart/form-data">
                             <!-- Demo Mode Section -->
                             <div id="demo-mode-section" class="mb-6 hidden">
-                                <h4 class="text-lg font-medium text-gray-900 mb-4">Select Demo Audio File</h4>
-                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                    <div class="demo-file-option border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors" data-demo-id="yuri_kizaki">
-                                        <div class="flex items-start">
-                                            <div class="flex-shrink-0">
-                                                <i class="fas fa-microphone text-2xl text-blue-600"></i>
-                                            </div>
-                                            <div class="ml-3">
-                                                <h5 class="text-sm font-medium text-gray-900">Yuri Kizaki - Japanese Audio</h5>
-                                                <p class="text-sm text-gray-500 mt-1">Audio message about website communication enhancement</p>
-                                                <div class="flex items-center mt-2">
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Japanese</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                
+                                <!-- Scrollable demo files container -->
+                                <div class="relative">
+                                    <!-- Scroll buttons for mobile -->
+                                    <div class="flex justify-between items-center mb-2 sm:hidden">
+                                        <button type="button" id="scroll-left" class="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50" disabled>
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                        <button type="button" id="scroll-right" class="p-2 text-gray-500 hover:text-gray-700">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
                                     </div>
                                     
-                                    <div class="demo-file-option border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors" data-demo-id="film_podcast">
-                                        <div class="flex items-start">
-                                            <div class="flex-shrink-0">
-                                                <i class="fas fa-podcast text-2xl text-green-600"></i>
-                                            </div>
-                                            <div class="ml-3">
-                                                <h5 class="text-sm font-medium text-gray-900">French Film Podcast</h5>
-                                                <p class="text-sm text-gray-500 mt-1">Discussion about recent movies including Social Network</p>
-                                                <div class="flex items-center mt-2">
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">French</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <!-- Scrollable demo files grid -->
+                                    <div id="demo-files-container" class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style="scroll-behavior: smooth;">
+                                        <!-- Demo files will be populated dynamically -->
                                     </div>
+                                    
+                                    <!-- Scroll indicators -->
+                                    <!-- <div class="flex justify-center mt-2 space-x-1">
+                                        <div class="w-2 h-2 bg-gray-300 rounded-full scroll-indicator active"></div>
+                                        <div class="w-2 h-2 bg-gray-300 rounded-full scroll-indicator"></div>
+                                        <div class="w-2 h-2 bg-gray-300 rounded-full scroll-indicator"></div>
+                                        <div class="w-2 h-2 bg-gray-300 rounded-full scroll-indicator"></div>
+                                    </div> -->
                                 </div>
+                                
                                 <input type="hidden" id="selected-demo-file" name="demo_file_id" value="">
                             </div>
 
@@ -324,7 +360,7 @@
                             </div>
 
                             <!-- Configuration Options -->
-                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 mb-6">
+                            <div id="config-options" class="grid grid-cols-1 gap-6 sm:grid-cols-2 mb-6">
                                 <div>
                                     <label for="whisper-model" class="block text-sm font-medium text-gray-700">Model Size</label>
                                     <select id="whisper-model" name="whisper_model" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
@@ -351,8 +387,8 @@
                                 </div>
                             </div>
 
-                            <!-- Submit Button -->
-                            <div class="flex justify-center">
+                            <!-- Submit Button (hidden in demo mode) -->
+                            <div id="process-btn-container" class="flex justify-center">
                                 <button type="submit" id="process-btn" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fas fa-play mr-2"></i>
                                     Process Audio
@@ -453,9 +489,11 @@
                 </div>
                 <div id="system-info-content">
                     <div class="loading text-center py-4">
-                        <i class="fas fa-spinner text-2xl text-blue-500"></i>
+                        <div class="inline-block">
+                            <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
+                        </div>
+                        <p class="mt-2 text-gray-600">Loading system information...</p>
                     </div>
-                    <p class="mt-2 text-gray-600">Loading system information...</p>
                 </div>
             </div>
         </div>
@@ -532,18 +570,29 @@
                 demoModeBtn.className = 'inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500';
                 processingModeBtn.className = 'inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
                 
-                // Show demo section, hide file upload
+                // Show demo section, hide file upload and config options
                 document.getElementById('demo-mode-section').classList.remove('hidden');
                 document.getElementById('file-upload-section').classList.add('hidden');
+                document.getElementById('config-options').classList.add('hidden');
+                
+                // Hide Process Audio button in demo mode
+                document.getElementById('process-btn-container').classList.add('hidden');
+                
+                // Load demo files when switching to demo mode
+                loadDemoFiles();
             } else {
                 processingModeIndicator.innerHTML = '<i class="fas fa-cog mr-2"></i>Full Processing Mode';
                 processingModeIndicator.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800';
                 demoModeBtn.className = 'inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
                 processingModeBtn.className = 'inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
                 
-                // Hide demo section, show file upload
+                // Hide demo section, show file upload and config options
                 document.getElementById('demo-mode-section').classList.add('hidden');
                 document.getElementById('file-upload-section').classList.remove('hidden');
+                document.getElementById('config-options').classList.remove('hidden');
+                
+                // Show Process Audio button in full mode
+                document.getElementById('process-btn-container').classList.remove('hidden');
             }
         }
 
@@ -572,24 +621,30 @@
         }
 
         // Demo file selection handling
-        document.querySelectorAll('.demo-file-option').forEach(option => {
-            option.addEventListener('click', () => {
-                // Remove selection from all options
-                document.querySelectorAll('.demo-file-option').forEach(opt => {
-                    opt.classList.remove('border-blue-500', 'bg-blue-50');
-                    opt.classList.add('border-gray-200');
+        document.addEventListener('DOMContentLoaded', () => {
+            const demoOptions = document.querySelectorAll('.demo-file-option');
+            demoOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Remove selection from all options
+                    document.querySelectorAll('.demo-file-option').forEach(opt => {
+                        opt.classList.remove('border-blue-500', 'bg-blue-50');
+                        opt.classList.add('border-gray-200');
+                    });
+                    
+                    // Select clicked option
+                    option.classList.add('border-blue-500', 'bg-blue-50');
+                    option.classList.remove('border-gray-200');
+                    
+                    // Set selected demo file ID
+                    const demoId = option.dataset.demoId;
+                    const selectedDemoFile = document.getElementById('selected-demo-file');
+                    if (selectedDemoFile) {
+                        selectedDemoFile.value = demoId;
+                    }
+                    
+                    // Load demo audio preview
+                    loadDemoAudioPreview(demoId);
                 });
-                
-                // Select clicked option
-                option.classList.add('border-blue-500', 'bg-blue-50');
-                option.classList.remove('border-gray-200');
-                
-                // Set selected demo file ID
-                const demoId = option.dataset.demoId;
-                document.getElementById('selected-demo-file').value = demoId;
-                
-                // Load demo audio preview
-                loadDemoAudioPreview(demoId);
             });
         });
 
@@ -638,20 +693,29 @@
             }
         }
 
-        function generateDemoWaveform(duration) {
-            const canvas = document.getElementById('waveform-canvas');
+        function generateDemoWaveform(canvasElement, fileName = 'Audio Preview') {
+            // Support both old (duration) and new (canvas, fileName) calling patterns
+            let canvas;
+            if (typeof canvasElement === 'string' || typeof canvasElement === 'number') {
+                // Old calling pattern with duration
+                canvas = document.getElementById('waveform-canvas');
+            } else {
+                // New calling pattern with canvas element
+                canvas = canvasElement || document.getElementById('waveform-canvas');
+            }
             const ctx = canvas.getContext('2d');
             
             // Set canvas size
+            const canvasHeight = canvas.offsetHeight || 80;
             canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-            canvas.height = 80 * window.devicePixelRatio;
+            canvas.height = canvasHeight * window.devicePixelRatio;
             ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
             
             // Clear canvas
-            ctx.clearRect(0, 0, canvas.offsetWidth, 80);
+            ctx.clearRect(0, 0, canvas.offsetWidth, canvasHeight);
             
             // Generate sample waveform data
-            const samples = 200;
+            const samples = 100;  // Reduced from 200 for cleaner look
             const barWidth = canvas.offsetWidth / samples;
             
             ctx.fillStyle = '#3B82F6';
@@ -659,9 +723,9 @@
             for (let i = 0; i < samples; i++) {
                 // Generate realistic waveform pattern
                 const amplitude = Math.sin(i * 0.1) * Math.random() * 0.8 + 0.2;
-                const height = amplitude * 60;
+                const height = amplitude * (canvasHeight * 0.8);
                 const x = i * barWidth;
-                const y = (80 - height) / 2;
+                const y = (canvasHeight - height) / 2;
                 
                 ctx.fillRect(x, y, barWidth - 1, height);
             }
@@ -687,62 +751,158 @@
                     audioPlayer.addEventListener('loadedmetadata', () => {
                         generateWaveformFromAudio(audioPlayer);
                     });
+                    
+                    // Also generate static waveform immediately
+                    const canvas = document.getElementById('waveform-canvas');
+                    if (canvas) {
+                        generateDemoWaveform(canvas, file.name);
+                    }
                 }
             }
         }
 
-        function generateWaveformFromAudio(audioElement) {
-            try {
-                // Create AudioContext for waveform generation
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const source = audioContext.createMediaElementSource(audioElement);
-                const analyser = audioContext.createAnalyser();
+        function generateWaveformFromAudio(audioElement, targetCanvas = null, audioSource = null) {
+            console.log('🎨 Generating waveform visualization...');
+            
+            // Find the right canvas element 
+            const canvas = targetCanvas || 
+                          document.getElementById('demo-waveform-canvas') || 
+                          document.getElementById('waveform-canvas');
+                          
+            if (!canvas) {
+                console.warn('⚠️ No canvas element found for waveform');
+                return;
+            }
+
+            // Set canvas dimensions
+            canvas.width = canvas.offsetWidth * (window.devicePixelRatio || 1);
+            canvas.height = (canvas.offsetHeight || 80) * (window.devicePixelRatio || 1);
+            const ctx = canvas.getContext('2d');
+            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+            // Always generate static waveform first as fallback
+            generateDemoWaveform(canvas, 'Audio Preview');
+
+            // Try to generate actual waveform from audio data
+            if (audioElement && audioElement.src) {
+                console.log('📊 Attempting to generate real waveform from audio data...');
                 
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-                
-                analyser.fftSize = 512;
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                
-                const canvas = document.getElementById('waveform-canvas');
-                const ctx = canvas.getContext('2d');
-                
-                function draw() {
-                    analyser.getByteFrequencyData(dataArray);
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#3B82F6';
-                    
-                    const barWidth = canvas.offsetWidth / bufferLength;
-                    
-                    for (let i = 0; i < bufferLength; i++) {
-                        const barHeight = (dataArray[i] / 255) * 60;
-                        const x = i * barWidth;
-                        const y = (80 - barHeight) / 2;
+                    // Fetch and decode audio data for static waveform
+                    fetch(audioElement.src)
+                        .then(response => response.arrayBuffer())
+                        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+                        .then(audioBuffer => {
+                            console.log('✅ Audio decoded successfully, drawing real waveform');
+                            drawWaveformFromBuffer(audioBuffer, canvas);
+                            
+                            // Setup live waveform when audio plays
+                            setupLiveWaveform(audioElement, canvas);
+                        })
+                        .catch(err => {
+                            console.warn("⚠️ Could not decode audio, using static fallback", err);
+                        });
                         
-                        ctx.fillRect(x, y, barWidth - 1, barHeight);
-                    }
-                    
-                    if (!audioElement.paused) {
-                        requestAnimationFrame(draw);
-                    }
+                } catch (error) {
+                    console.warn('⚠️ Web Audio API not available, using static fallback', error);
                 }
+            }
+
+            function drawWaveformFromBuffer(audioBuffer, canvas) {
+                const ctx = canvas.getContext('2d');
+                const rawData = audioBuffer.getChannelData(0); // mono
+                const samples = 100; // number of bars
+                const blockSize = Math.floor(rawData.length / samples);
+                const filteredData = [];
                 
-                // Initial static waveform
-                generateDemoWaveform(audioElement.duration || 30);
-                
-                // Dynamic waveform when playing
-                audioElement.addEventListener('play', () => {
-                    if (audioContext.state === 'suspended') {
-                        audioContext.resume();
+                // Process audio data into sample points
+                for (let i = 0; i < samples; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < blockSize; j++) {
+                        const sample = rawData[i * blockSize + j];
+                        sum += Math.abs(sample);
                     }
-                    draw();
+                    filteredData.push(sum / blockSize);
+                }
+
+                // Clear and draw waveform
+                ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+                ctx.fillStyle = '#3B82F6';
+
+                const barWidth = canvas.offsetWidth / samples;
+                const maxHeight = canvas.offsetHeight * 0.9;
+                
+                filteredData.forEach((val, i) => {
+                    const barHeight = val * maxHeight;
+                    const x = i * barWidth;
+                    const y = (canvas.offsetHeight - barHeight) / 2;
+                    ctx.fillRect(x, y, barWidth - 1, barHeight);
+                });
+            }
+            
+            function setupLiveWaveform(audioElement, canvas) {
+                // Setup live visualization when audio plays
+                audioElement.addEventListener('play', () => {
+                    console.log('🎵 Starting live waveform visualization...');
+                    
+                    try {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        
+                        if (audioContext.state === 'suspended') {
+                            audioContext.resume();
+                        }
+                        
+                        const source = audioContext.createMediaElementSource(audioElement);
+                        const analyser = audioContext.createAnalyser();
+                        
+                        source.connect(analyser);
+                        analyser.connect(audioContext.destination);
+                        
+                        analyser.fftSize = 256;
+                        const bufferLength = analyser.frequencyBinCount;
+                        const dataArray = new Uint8Array(bufferLength);
+                        
+                        const ctx = canvas.getContext('2d');
+                        
+                        function drawLiveWaveform() {
+                            if (audioElement.paused) return;
+                            
+                            analyser.getByteFrequencyData(dataArray);
+                            
+                            ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+                            ctx.fillStyle = '#10B981'; // Green for live
+                            
+                            const barWidth = canvas.offsetWidth / bufferLength;
+                            const maxHeight = canvas.offsetHeight * 0.8;
+                            
+                            for (let i = 0; i < bufferLength; i++) {
+                                const barHeight = (dataArray[i] / 255) * maxHeight;
+                                const x = i * barWidth;
+                                const y = (canvas.offsetHeight - barHeight) / 2;
+                                
+                                ctx.fillRect(x, y, barWidth - 1, barHeight);
+                            }
+                            
+                            requestAnimationFrame(drawLiveWaveform);
+                        }
+                        
+                        drawLiveWaveform();
+                        
+                    } catch (error) {
+                        console.warn('⚠️ Live waveform not available:', error);
+                    }
                 });
                 
-            } catch (error) {
-                console.log('Web Audio API not available, showing static waveform');
-                generateDemoWaveform(audioElement.duration || 30);
+                // Restore static waveform when audio stops
+                audioElement.addEventListener('pause', () => {
+                    setTimeout(() => {
+                        if (audioElement.paused) {
+                            generateWaveformFromAudio(audioElement, canvas);
+                        }
+                    }, 100);
+                });
             }
         }
 
@@ -794,7 +954,7 @@
             
             // Validate based on mode
             if (isDemoMode) {
-                const selectedDemo = document.getElementById('selected-demo-file').value;
+                const selectedDemo = document.getElementById('demo-selector').value;
                 if (!selectedDemo) {
                     alert('Please select a demo audio file.');
                     return;
@@ -810,7 +970,7 @@
             
             // Add form data based on mode
             if (isDemoMode) {
-                formData.append('demo_file_id', document.getElementById('selected-demo-file').value);
+                formData.append('demo_file_id', document.getElementById('demo-selector').value);
                 formData.append('whisper_model', document.getElementById('whisper-model').value);
                 formData.append('target_language', document.getElementById('target-language').value);
             } else {
@@ -821,14 +981,31 @@
             
             try {
                 processBtn.disabled = true;
-                processBtn.innerHTML = '<i class="fas fa-spinner loading mr-2"></i>Starting...';
+                processBtn.innerHTML = '<i class="fas fa-spinner loading-spinner mr-2"></i>Starting...';
                 
                 // Choose endpoint based on mode
-                const endpoint = isDemoMode ? '/api/demo-process' : '/api/upload';
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    body: formData
-                });
+                let response;
+                if (isDemoMode) {
+                    // In demo mode, use the same approach as "View Results" button
+                    const selector = document.getElementById('demo-selector');
+                    if (!selector || !selector.value) {
+                        alert('Please select a demo audio file first.');
+                        return;
+                    }
+                    const demoId = selector.value;
+                    response = await fetch(`/api/process-demo/${demoId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                } else {
+                    // Full processing mode
+                    response = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -866,15 +1043,40 @@
             progressInterval = setInterval(async () => {
                 try {
                     const response = await fetch(`/api/status/${currentTaskId}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Status fetch failed: ${response.status}`);
+                    }
+                    
                     const status = await response.json();
+                    
+                    if (!status) {
+                        console.warn('⚠️ Empty status response');
+                        return;
+                    }
                     
                     updateProgress(status);
                     
                     if (status.status === 'complete') {
                         clearInterval(progressInterval);
                         const resultsResponse = await fetch(`/api/results/${currentTaskId}`);
+                        
+                        if (!resultsResponse.ok) {
+                            throw new Error(`Results fetch failed: ${resultsResponse.status}`);
+                        }
+                        
                         const results = await resultsResponse.json();
-                        showResults(results.results);
+                        
+                        if (results && results.results) {
+                            showResults(results.results);
+                        } else if (results) {
+                            // Handle direct results format (full processing mode)
+                            showResults(results);
+                        } else {
+                            console.error('❌ Invalid results format:', results);
+                            alert('Error: No results available');
+                            progressSection.classList.add('hidden');
+                        }
                     } else if (status.status === 'error') {
                         clearInterval(progressInterval);
                         alert('Processing error: ' + status.error);
@@ -913,17 +1115,81 @@
             progressSection.classList.add('hidden');
             resultsSection.classList.remove('hidden');
             
+            console.log('🎯 Processing results:', results);
+            
+            // Handle different result formats (old vs new pipeline output)
+            let segments, summary;
+            
+            if (results.segments && results.summary) {
+                // Old format: direct segments and summary
+                segments = results.segments;
+                summary = results.summary;
+            } else if (results.outputs && results.outputs.json) {
+                // New format: segments in outputs.json (JSON string)
+                try {
+                    const jsonData = JSON.parse(results.outputs.json);
+                    segments = jsonData.segments || [];
+                    summary = jsonData.statistics || results.processing_stats || {};
+                } catch (e) {
+                    console.error('❌ Failed to parse JSON output:', e);
+                    segments = [];
+                    summary = {};
+                }
+            } else if (results.processed_segments) {
+                // Alternative new format: processed_segments array (string representations need parsing)
+                segments = results.processed_segments.map(seg => {
+                    // Handle string representation of ProcessedSegment
+                    if (typeof seg === 'string' && seg.startsWith('ProcessedSegment(')) {
+                        // Extract data from string representation
+                        const match = seg.match(/ProcessedSegment\(start_time=([\d.]+), end_time=([\d.]+), speaker_id='([^']+)', original_text='([^']+)', original_language='([^']+)', translated_text='([^']+)'/);
+                        if (match) {
+                            return {
+                                speaker: match[3],
+                                start_time: parseFloat(match[1]),
+                                end_time: parseFloat(match[2]),
+                                text: match[4],
+                                translated_text: match[6],
+                                language: match[5]
+                            };
+                        }
+                    }
+                    
+                    // Handle object representation
+                    return {
+                        speaker: seg.speaker_id || 'Unknown',
+                        start_time: seg.start_time,
+                        end_time: seg.end_time,
+                        text: seg.original_text || seg.text,
+                        translated_text: seg.translated_text,
+                        language: seg.original_language || seg.language
+                    };
+                });
+                summary = results.processing_stats || {};
+            } else {
+                console.error('❌ Unknown results format:', results);
+                alert('Error: Unable to display results - unknown format');
+                return;
+            }
+            
+            console.log('✅ Processed segments:', segments.length);
+            console.log('✅ Summary data:', summary);
+            
             // Populate transcript
-            populateTranscript(results.segments);
+            populateTranscript(segments);
             
             // Populate visualizations
-            populateVisualizations(results.segments);
+            populateVisualizations(segments);
             
             // Populate summary
-            populateSummary(results.summary);
+            populateSummary(summary);
             
             // Setup download buttons
             setupDownloadButtons();
+            
+            // Schedule delayed cleanup for non-demo processing
+            if (!isDemoMode) {
+                scheduleDelayedCleanup();
+            }
         }
 
         function populateVisualizations(segments) {
@@ -940,8 +1206,8 @@
             const languageDurations = {};
             
             segments.forEach(seg => {
-                const lang = seg.language.toUpperCase();
-                const duration = seg.end_time - seg.start_time;
+                const lang = (seg.language || seg.original_language || 'unknown').toUpperCase();
+                const duration = (seg.end_time || 0) - (seg.start_time || 0);
                 
                 languages[lang] = (languages[lang] || 0) + 1;
                 languageDurations[lang] = (languageDurations[lang] || 0) + duration;
@@ -972,24 +1238,24 @@
         }
 
         function createSpeakerTimeline(segments) {
-            const speakers = [...new Set(segments.map(seg => seg.speaker))];
+            const speakers = [...new Set(segments.map(seg => seg.speaker || seg.speaker_id || 'Unknown'))];
             const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
             
             const data = speakers.map((speaker, index) => {
-                const speakerSegments = segments.filter(seg => seg.speaker === speaker);
+                const speakerSegments = segments.filter(seg => (seg.speaker || seg.speaker_id || 'Unknown') === speaker);
                 
                 return {
-                    x: speakerSegments.map(seg => seg.start_time),
+                    x: speakerSegments.map(seg => seg.start_time || 0),
                     y: speakerSegments.map(() => speaker),
                     mode: 'markers',
                     type: 'scatter',
                     marker: {
-                        size: speakerSegments.map(seg => (seg.end_time - seg.start_time) * 5),
+                        size: speakerSegments.map(seg => ((seg.end_time || 0) - (seg.start_time || 0)) * 5),
                         color: colors[index % colors.length],
                         opacity: 0.7
                     },
                     name: speaker,
-                    text: speakerSegments.map(seg => `${seg.text.substring(0, 50)}...`),
+                    text: speakerSegments.map(seg => `${(seg.text || seg.original_text || '').substring(0, 50)}...`),
                     hovertemplate: '%{text}<br>Time: %{x:.1f}s<extra></extra>'
                 };
             });
@@ -1030,12 +1296,12 @@
                         <div class="bg-gray-50 p-3 rounded-lg">
                             <div class="flex items-center mb-2">
                                 <i class="fas fa-microphone text-gray-600 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Original (${segment.language.toUpperCase()})</span>
+                                <span class="text-sm font-medium text-gray-700">Original (${(segment.language || segment.original_language || 'Unknown').toUpperCase()})</span>
                             </div>
                             <p class="text-gray-800 leading-relaxed">${segment.text}</p>
                         </div>
                         
-                        ${segment.translated_text && segment.translated_text !== segment.text && segment.language !== 'en' ? `
+                        ${segment.translated_text && segment.translated_text !== segment.text && (segment.language || segment.original_language) !== 'en' ? `
                         <div class="bg-blue-50 p-3 rounded-lg">
                             <div class="flex items-center mb-2">
                                 <i class="fas fa-language text-blue-600 mr-2"></i>
@@ -1057,25 +1323,25 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-700">Total Duration</h4>
-                        <p class="text-2xl font-bold text-gray-900">${formatTime(summary.total_duration)}</p>
+                        <p class="text-2xl font-bold text-gray-900">${formatTime(summary.total_duration || 0)}</p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-700">Speakers Detected</h4>
-                        <p class="text-2xl font-bold text-gray-900">${summary.num_speakers}</p>
+                        <p class="text-2xl font-bold text-gray-900">${summary.num_speakers || 0}</p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-700">Speech Segments</h4>
-                        <p class="text-2xl font-bold text-gray-900">${summary.num_segments}</p>
+                        <p class="text-2xl font-bold text-gray-900">${summary.num_segments || 0}</p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-700">Processing Time</h4>
-                        <p class="text-2xl font-bold text-gray-900">${summary.processing_time}s</p>
+                        <p class="text-2xl font-bold text-gray-900">${Math.round(summary.processing_time || 0)}s</p>
                     </div>
                 </div>
                 <div class="mt-4">
                     <h4 class="text-sm font-medium text-gray-700 mb-2">Languages Detected</h4>
                     <div class="flex flex-wrap gap-2">
-                        ${summary.languages.map(lang => 
+                        ${(summary.languages || []).map(lang => 
                             `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">${lang}</span>`
                         ).join('')}
                     </div>
@@ -1128,11 +1394,20 @@
 
             const content = document.getElementById('system-info-content');
             content.innerHTML = `
-                <div class="loading text-center py-4">
-                    <i class="fas fa-spinner text-2xl text-blue-500 animate-spin"></i>
-                    <p class="mt-2 text-gray-600">Loading system information...</p>
+                <div class="loading text-center py-4 flex flex-col items-center">
+                    <div class="mb-2">
+                        <i class="fas fa-spinner text-2xl text-blue-500 animate-spin"></i>
+                    </div>
+                    <p class="text-gray-600">Loading system information...</p>
                 </div>
             `;
+            // content.innerHTML = `
+            //     <div class="loading text-center py-4">
+            //         <i class="fas fa-spinner text-2xl text-blue-500 animate-spin"></i>
+            //         <p class="mt-2 text-gray-600">Loading system information...</p>
+            //     </div>
+            // `;
+
 
             try {
                 const response = await fetch('/api/system-info');
@@ -1187,6 +1462,836 @@
 
         // Initialize page
         updateProcessingMode();
+        
+        // Load demo files if we start in demo mode
+        if (isDemoMode) {
+            loadDemoFiles();
+        }
+        
+        // Demo files management
+        let demoFiles = [];
+        
+        // Create fallback demo files if API fails
+        function createFallbackDemoFiles() {
+            demoFiles = [
+                {
+                    id: "yuri_kizaki",
+                    name: "Yuri Kizaki",
+                    filename: "Yuri_Kizaki.mp3",
+                    language: "ja",
+                    description: "Japanese audio message about website communication",
+                    duration: "00:01:45",
+                    available: true,
+                    download_status: "ready"
+                },
+                {
+                    id: "film_podcast",
+                    name: "Film Podcast", 
+                    filename: "Film_Podcast.mp3",
+                    language: "fr",
+                    description: "French podcast discussing various films and cinema",
+                    duration: "00:03:32",
+                    available: true,
+                    download_status: "ready"
+                },
+                {
+                    id: "tamil_interview",
+                    name: "Tamil Wikipedia Interview",
+                    filename: "Tamil_Wikipedia_Interview.ogg",
+                    language: "ta",
+                    description: "Discussion on Tamil Wikipedia and collaborative knowledge sharing",
+                    duration: "00:36:17",
+                    available: true,
+                    download_status: "ready"
+                },
+                {
+                    id: "car_trouble",
+                    name: "Car Trouble",
+                    filename: "Car_Trouble.mp3", 
+                    language: "hi",
+                    description: "Conversation about waiting for a mechanic and basic assistance",
+                    duration: "00:02:45",
+                    available: true,
+                    download_status: "ready"
+                }
+            ];
+            populateDemoFiles();
+            
+            // Auto-select the first demo file (Yuri Kizaki)
+            setTimeout(() => {
+                selectDemoFile(demoFiles[0].id);
+                const firstOption = document.querySelector(`[data-demo-id="${demoFiles[0].id}"]`);
+                if (firstOption) {
+                    firstOption.classList.add('border-blue-500', 'bg-blue-50');
+                    firstOption.classList.remove('border-gray-200');
+                }
+            }, 100);
+        }
+        
+        // Get appropriate icon for language
+        function getIconForLanguage(language) {
+            const icons = {
+                'ja': 'fas fa-microphone',
+                'fr': 'fas fa-podcast',
+                'ta': 'fas fa-headphones',
+                'hi': 'fas fa-volume-up'
+            };
+            return icons[language] || 'fas fa-music';
+        }
+        
+        // Get status class for download status
+        function getStatusClass(status) {
+            const classes = {
+                'pending': 'bg-gray-100 text-gray-800',
+                'downloading': 'bg-yellow-100 text-yellow-800',
+                'completed': 'bg-green-100 text-green-800',
+                'ready': 'bg-green-100 text-green-800',
+                'failed': 'bg-red-100 text-red-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+        
+        // Get status text for download status
+        function getStatusText(status) {
+            const texts = {
+                'pending': 'Pending',
+                'downloading': 'Downloading...',
+                'completed': 'Available',
+                'ready': 'Ready',
+                'failed': 'Failed'
+            };
+            return texts[status] || 'Unknown';
+        }
+        
+        // Select demo file
+        function selectDemoFile(demoId) {
+            document.getElementById('selected-demo-file').value = demoId;
+            console.log('Selected demo file:', demoId);
+        }
+        
+        // Scroll functionality for demo files
+        function updateScrollIndicators() {
+            const container = document.getElementById('demo-files-container');
+            const indicators = document.querySelectorAll('.scroll-indicator');
+            const scrollLeft = container.scrollLeft;
+            const maxScroll = container.scrollWidth - container.clientWidth;
+            
+            // Update scroll buttons
+            const leftBtn = document.getElementById('scroll-left');
+            const rightBtn = document.getElementById('scroll-right');
+            
+            if (leftBtn) leftBtn.disabled = scrollLeft <= 0;
+            if (rightBtn) rightBtn.disabled = scrollLeft >= maxScroll;
+            
+            // Update indicators
+            const scrollPercentage = maxScroll > 0 ? scrollLeft / maxScroll : 0;
+            const activeIndex = Math.floor(scrollPercentage * (indicators.length - 1));
+            
+            indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === activeIndex);
+            });
+        }
+        
+        // Scroll event handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('demo-files-container');
+            if (container) {
+                container.addEventListener('scroll', updateScrollIndicators);
+            }
+            
+            // Scroll button handlers
+            const leftBtn = document.getElementById('scroll-left');
+            const rightBtn = document.getElementById('scroll-right');
+            
+            if (leftBtn) {
+                leftBtn.addEventListener('click', () => {
+                    container.scrollBy({ left: -300, behavior: 'smooth' });
+                });
+            }
+            
+            if (rightBtn) {
+                rightBtn.addEventListener('click', () => {
+                    container.scrollBy({ left: 300, behavior: 'smooth' });
+                });
+            }
+        });
+        
+        // Load demo files when switching to demo mode
+        const demoModeToggle = document.getElementById('demo-mode-toggle');
+        if (demoModeToggle) {
+            demoModeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    loadDemoFiles();
+                }
+            });
+            
+            // Load demo files on page load if demo mode is enabled
+            if (demoModeToggle.checked) {
+                loadDemoFiles();
+            }
+        }
+        
+        // Load demo files from server or use fallback
+        async function loadDemoFiles() {
+            console.log('🔄 Loading demo files from API...');
+            try {
+                const response = await fetch('/api/demo-files');
+                console.log('📡 API Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('📋 API returned demo files:', data);
+                
+                // Check if data has demo_files property or is direct array
+                if (data.demo_files && Array.isArray(data.demo_files)) {
+                    demoFiles = data.demo_files;
+                    console.log('✅ Demo files loaded from API:', demoFiles.length);
+                    console.log('📋 Demo files details:', demoFiles);
+                    populateDemoFiles();
+                } else if (Array.isArray(data)) {
+                    demoFiles = data;
+                    console.log('✅ Demo files loaded as direct array:', demoFiles.length);
+                    populateDemoFiles();
+                } else {
+                    console.warn('⚠️ Unexpected API response format, using fallback');
+                    createFallbackDemoFiles();
+                }
+            } catch (error) {
+                console.error('❌ Failed to load demo files:', error);
+                console.error('Error details:', error.message);
+                createFallbackDemoFiles();
+            }
+        }
+        
+        // Populate demo files in the UI - showing one at a time like uploaded files
+        function populateDemoFiles() {
+            console.log('🏗️ Starting populateDemoFiles...');
+            console.log('📋 Demo files to populate:', demoFiles);
+            
+            const container = document.getElementById('demo-files-container');
+            console.log('🎯 Container element:', container);
+            
+            if (!container) {
+                console.error('❌ Demo files container not found! Expected element with id="demo-files-container"');
+                return;
+            }
+            
+            console.log('✅ Container found, clearing existing content...');
+            container.innerHTML = '';
+            
+            if (demoFiles.length === 0) {
+                console.warn('⚠️ No demo files to display');
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No demo files available</p>';
+                return;
+            }
+            
+            console.log(`🔧 Creating single demo file selector for ${demoFiles.length} files...`);
+            console.log('📋 Available demo files:', demoFiles.map(f => ({ id: f.id, name: f.name })));
+            
+            // Create a single full-width demo file display (like uploaded file)
+            const demoContainer = document.createElement('div');
+            demoContainer.className = 'w-full';
+            
+            // Create dropdown selector for demo files
+            const selectorHTML = `
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200 w-full">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-play text-white text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <label for="demo-selector" class="block text-sm font-medium text-gray-700 mb-2">
+                                Choose a sample:
+                            </label>
+                            <select id="demo-selector" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                ${demoFiles.map(file => 
+                                    `<option value="${file.id}" data-name="${file.name}" data-filename="${file.filename || ''}" data-description="${file.description || ''}" data-language="${file.language || 'Unknown'}" data-duration="${file.duration || 'Unknown'}">
+                                        ${file.name}
+                                    </option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Demo file details (will be updated when selection changes) -->
+                    <div id="demo-details" class="bg-white rounded-lg p-4 border border-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <span class="font-medium text-gray-600">Language:</span>
+                                <span id="demo-language" class="ml-2 text-gray-800">${demoFiles[0]?.language || 'Unknown'}</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-600">Duration:</span>
+                                <span id="demo-duration" class="ml-2 text-gray-800">${demoFiles[0]?.duration || 'Unknown'}</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-600">Status:</span>
+                                <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Ready</span>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span class="font-medium text-gray-600">Description:</span>
+                            <p id="demo-description" class="mt-1 text-gray-700">${demoFiles[0]?.description || 'Demo audio file for testing'}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Preview and Processing -->
+                    <div class="mt-4 space-y-4">
+                        <!-- Audio Preview -->
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-headphones mr-2"></i>Audio Preview
+                            </h4>
+                            <audio id="demo-audio-player" controls class="w-full mb-3">
+                                <source id="demo-audio-source" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                            <!-- Waveform Visualization -->
+                            <div id="demo-waveform-container" class="mt-3">
+                                <canvas id="demo-waveform-canvas" class="w-full h-16 bg-gray-50 rounded border"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Demo Results Section -->
+                        <div class="flex justify-center">
+                            <button onclick="loadDemoResults()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+                                <i class="fas fa-eye mr-2"></i>View Processing Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            demoContainer.innerHTML = selectorHTML;
+            container.appendChild(demoContainer);
+            
+            // Add event listener for dropdown changes
+            const selector = document.getElementById('demo-selector');
+            if (selector) {
+                selector.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    updateDemoDetails(selectedOption);
+                    loadDemoAudio(this.value, selectedOption.dataset.filename || selectedOption.dataset.name);
+                });
+                
+                // Load initial demo audio
+                if (selector.options.length > 0) {
+                    const firstOption = selector.options[0];
+                    loadDemoAudio(selector.value, firstOption.dataset.name);
+                }
+            }
+            
+            console.log('✅ Demo files populated successfully');
+        }
+        
+        // Update demo file details when selection changes
+        function updateDemoDetails(selectedOption) {
+            const languageEl = document.getElementById('demo-language');
+            const durationEl = document.getElementById('demo-duration');
+            const descriptionEl = document.getElementById('demo-description');
+            
+            if (languageEl) languageEl.textContent = selectedOption.dataset.language || 'Unknown';
+            if (durationEl) durationEl.textContent = selectedOption.dataset.duration || 'Unknown';
+            if (descriptionEl) descriptionEl.textContent = selectedOption.dataset.description || 'Demo audio file for testing';
+            
+            console.log('✅ Updated demo details for:', selectedOption.dataset.name);
+        }
+        
+        // Load demo audio for preview
+        function loadDemoAudio(demoId, fileName) {
+            console.log('🎵 Loading demo audio:', demoId, fileName);
+            
+            const audioPlayer = document.getElementById('demo-audio-player');
+            const audioSource = document.getElementById('demo-audio-source');
+            const waveformCanvas = document.getElementById('demo-waveform-canvas');
+            
+            if (!audioPlayer || !audioSource || !waveformCanvas) {
+                console.warn('⚠️ Demo audio elements not found');
+                return;
+            }
+            
+            // Get actual filename from demo files data or use the provided fileName
+            let actualFileName = fileName;
+            
+            // Get actual filename from demo files data or use mapping
+            if (demoFiles && demoFiles.length > 0) {
+                const demoFile = demoFiles.find(file => file.id === demoId);
+                if (demoFile && demoFile.filename) {
+                    actualFileName = demoFile.filename;
+                }
+            } else {
+                // Fallback mapping
+                const filenameMap = {
+                    'yuri_kizaki': 'Yuri_Kizaki.mp3',
+                    'film_podcast': 'Film_Podcast.mp3', 
+                    'car_trouble': 'Car_Trouble.mp3',
+                    'tamil_interview': 'Tamil_Wikipedia_Interview.ogg'
+                };
+                
+                if (filenameMap[demoId]) {
+                    actualFileName = filenameMap[demoId];
+                }
+            }
+            
+            console.log(`🎵 Mapped ${demoId} -> ${actualFileName}`);
+            
+            // Set audio source using the server route
+            const audioPath = `/demo_audio/${actualFileName}`;
+            
+            console.log(`🔍 Loading audio from: ${audioPath}`);
+            
+            // Set the audio source directly
+            audioSource.src = audioPath;
+            audioPlayer.load();
+            
+            // Handle audio loading events
+            const onCanPlay = function() {
+                console.log('✅ Demo audio loaded successfully');
+                generateWaveformFromAudio(audioPlayer, waveformCanvas, audioSource);
+                audioPlayer.removeEventListener('canplaythrough', onCanPlay);
+                audioPlayer.removeEventListener('error', onError);
+            };
+            
+            const onError = function() {
+                console.warn(`❌ Failed to load audio: ${audioPath}`);
+                console.log(`⚠️ Generating placeholder waveform for: ${actualFileName}`);
+                generateDemoWaveform(waveformCanvas, actualFileName);
+                audioPlayer.removeEventListener('canplaythrough', onCanPlay);
+                audioPlayer.removeEventListener('error', onError);
+            };
+            
+            audioPlayer.addEventListener('canplaythrough', onCanPlay);
+            audioPlayer.addEventListener('error', onError);
+        }
+
+        
+        // Generate demo waveform placeholder
+
+        
+        // Load demo results - shows pre-processed results for selected demo file
+        async function loadDemoResults() {
+            const selector = document.getElementById('demo-selector');
+            if (!selector || !selector.value) {
+                alert('Please select a demo audio file first.');
+                return;
+            }
+            
+            const demoId = selector.value;
+            console.log('🎯 Loading demo results for:', demoId);
+            
+            try {
+                // Show loading state
+                showProgress();
+                const progressBar = document.querySelector('.progress-bar-fill');
+                if (progressBar) progressBar.style.width = '50%';
+                
+                // Fetch demo results
+                const response = await fetch(`/api/process-demo/${demoId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('📋 Demo results received:', result);
+                
+                // Complete progress
+                if (progressBar) progressBar.style.width = '100%';
+                
+                setTimeout(() => {
+                    if (result.status === 'complete') {
+                        showResults(result.results);
+                    } else {
+                        throw new Error('Demo processing failed: ' + (result.error || 'Unknown error'));
+                    }
+                }, 500); // Brief delay to show completion
+                
+            } catch (error) {
+                console.error('❌ Demo results error:', error);
+                alert('Error loading demo results: ' + error.message);
+                
+                // Hide progress on error
+                const progressSection = document.getElementById('progress-section');
+                if (progressSection) progressSection.classList.add('hidden');
+            }
+        }
+        
+        // Process audio (unified function for both demo and full modes)
+        function processAudio() {
+            console.log('🎯 Processing audio...');
+            
+            // Check if we're in demo mode and handle accordingly
+            if (isDemoMode) {
+                const selector = document.getElementById('demo-selector');
+                if (!selector) {
+                    alert('Demo selector not found');
+                    return;
+                }
+                
+                const selectedId = selector.value;
+                const selectedOption = selector.options[selector.selectedIndex];
+                const fileName = selectedOption.dataset.name;
+                
+                console.log('🎯 Processing demo file:', selectedId, fileName);
+            }
+            
+            // Submit the form (this will trigger the existing form submission logic)
+            const uploadForm = document.getElementById('upload-form');
+            if (uploadForm) {
+                uploadForm.dispatchEvent(new Event('submit'));
+            } else {
+                alert('Upload form not found');
+            }
+        }
+            
+            console.log('Demo files population completed');
+        
+        // Utility functions for demo file status
+        function getStatusClass(status) {
+            switch(status) {
+                case 'ready': return 'bg-green-100 text-green-800';
+                case 'processing': return 'bg-yellow-100 text-yellow-800';
+                case 'downloading': return 'bg-blue-100 text-blue-800';
+                case 'error': return 'bg-red-100 text-red-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        function getStatusText(status) {
+            switch(status) {
+                case 'ready': return '✅ Ready';
+                case 'processing': return '⏳ Processing';
+                case 'downloading': return '⬇️ Downloading';
+                case 'error': return '❌ Error';
+                default: return '⚪ Unknown';
+            }
+        }
+        
+        function getIconForLanguage(language) {
+            const lang = language.toLowerCase();
+            if (lang.includes('japanese') || lang.includes('ja')) return 'fas fa-flag';
+            if (lang.includes('french') || lang.includes('fr')) return 'fas fa-flag';
+            if (lang.includes('tamil') || lang.includes('ta')) return 'fas fa-flag';
+            if (lang.includes('hindi') || lang.includes('hi')) return 'fas fa-flag';
+            return 'fas fa-globe';
+        }
+        
+        // Session management and cleanup
+        function triggerCleanup() {
+            // Send cleanup request (only for non-demo mode)
+            if (isDemoMode) {
+                console.log('🎯 Skipping cleanup in demo mode');
+                return;
+            }
+            
+            console.log('🧹 Triggering session cleanup...');
+            fetch('/api/cleanup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    console.log('✅ Session cleanup completed');
+                } else {
+                    console.warn('⚠️ Session cleanup failed');
+                }
+            }).catch(error => {
+                console.warn('⚠️ Session cleanup error:', error);
+            });
+        }
+        
+        // Auto-cleanup on page unload/refresh (only for non-demo mode)
+        window.addEventListener('beforeunload', function(event) {
+            // Only cleanup if we're not in demo mode and have actually uploaded files
+            if (!isDemoMode && currentTaskId) {
+                triggerCleanup();
+            }
+        });
+        
+        // Cleanup when results are fully displayed and user has had time to view them
+        let cleanupScheduled = false;
+        function scheduleDelayedCleanup() {
+            if (cleanupScheduled) return;
+            cleanupScheduled = true;
+            
+            // Wait 10 minutes after processing completes before cleanup
+            setTimeout(function() {
+                if (!isDemoMode) {
+                    console.log('🕒 Scheduled cleanup after results display');
+                    triggerCleanup();
+                }
+                cleanupScheduled = false;
+            }, 10 * 60 * 1000); // 10 minutes
+        }
+        
+        // Periodic cleanup check (much less frequent)
+        setInterval(function() {
+            // Only check session info, don't auto-cleanup unless really necessary
+            fetch('/api/session-info')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('📊 Session info:', data);
+                    // Only auto-cleanup if session has been inactive for over 2 hours
+                    const now = Date.now() / 1000;
+                    if (data.last_activity && (now - data.last_activity) > 7200) { // 2 hours
+                        console.log('🕒 Auto-cleanup due to long inactivity');
+                        triggerCleanup();
+                    }
+                })
+                .catch(error => {
+                    console.warn('⚠️ Failed to get session info:', error);
+                });
+        }, 60 * 60 * 1000); // Check every hour
+        
+        // Manual cleanup button (could be added to UI if needed)
+        function manualCleanup() {
+            triggerCleanup();
+            alert('🧹 Session cleanup requested. Your uploaded files have been removed from the server.');
+        }
+        // Live waveform visualization setup
+        function setupLiveWaveformVisualization() {
+            console.log('🎯 Setting up live waveform visualization');
+            
+            // Setup for demo mode
+            const demoAudioPlayer = document.getElementById('demo-audio-player');
+            const demoCanvas = document.getElementById('demo-waveform-canvas');
+            
+            if (demoAudioPlayer && demoCanvas) {
+                console.log('🎵 Setting up demo audio visualization');
+                setupAudioVisualization(demoAudioPlayer, demoCanvas, 'demo');
+            } else {
+                console.log('⚠️ Demo audio elements not found');
+            }
+            
+            // Setup for full processing mode (look for any audio elements)
+            const audioElements = document.querySelectorAll('audio');
+            const canvasElements = document.querySelectorAll('canvas[id*="waveform"]');
+            
+            audioElements.forEach((audio, index) => {
+                if (audio.id !== 'demo-audio-player') {
+                    const canvas = canvasElements[index] || document.getElementById('waveform-canvas');
+                    if (canvas) {
+                        console.log('🎵 Setting up full mode audio visualization');
+                        setupAudioVisualization(audio, canvas, 'full');
+                    }
+                }
+            });
+        }
+        
+        function setupAudioVisualization(audioElement, canvas, mode) {
+            console.log(`🔧 Setting up audio visualization for ${mode} mode`);
+            
+            let animationId = null;
+            let audioContext = null;
+            let analyser = null;
+            let dataArray = null;
+            let source = null;
+            
+            // Clean up any existing listeners
+            const existingListeners = audioElement._visualizationListeners;
+            if (existingListeners) {
+                audioElement.removeEventListener('play', existingListeners.play);
+                audioElement.removeEventListener('pause', existingListeners.pause);
+                audioElement.removeEventListener('ended', existingListeners.ended);
+            }
+            
+            // Create new listeners
+            const playListener = async () => {
+                try {
+                    console.log(`🎵 ${mode} audio started playing`);
+                    
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        console.log('🎯 Created new AudioContext');
+                    }
+                    
+                    if (!source) {
+                        source = audioContext.createMediaElementSource(audioElement);
+                        analyser = audioContext.createAnalyser();
+                        analyser.fftSize = 256;
+                        analyser.smoothingTimeConstant = 0.8;
+                        
+                        source.connect(analyser);
+                        analyser.connect(audioContext.destination);
+                        
+                        const bufferLength = analyser.frequencyBinCount;
+                        dataArray = new Uint8Array(bufferLength);
+                        console.log('🔗 Connected audio source to analyser');
+                    }
+                    
+                    if (audioContext.state === 'suspended') {
+                        await audioContext.resume();
+                        console.log('▶️ Resumed AudioContext');
+                    }
+                    
+                    startLiveVisualization();
+                    console.log(`✅ Live visualization started for ${mode} mode`);
+                } catch (error) {
+                    console.warn('⚠️ Web Audio API not available for live visualization:', error);
+                    // Fallback to static visualization
+                    drawStaticWaveform();
+                }
+            };
+            
+            const pauseListener = () => {
+                console.log(`⏸️ ${mode} audio paused`);
+                stopLiveVisualization();
+            };
+            
+            const endedListener = () => {
+                console.log(`⏹️ ${mode} audio ended`);
+                stopLiveVisualization();
+                drawStaticWaveform();
+            };
+            
+            // Add listeners
+            audioElement.addEventListener('play', playListener);
+            audioElement.addEventListener('pause', pauseListener);
+            audioElement.addEventListener('ended', endedListener);
+            
+            // Store references for cleanup
+            audioElement._visualizationListeners = {
+                play: playListener,
+                pause: pauseListener,
+                ended: endedListener
+            };
+            
+            // Draw initial static waveform
+            drawStaticWaveform();
+            
+            function drawStaticWaveform() {
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                const canvasWidth = canvas.offsetWidth || 800;
+                const canvasHeight = canvas.offsetHeight || 64;
+                
+                // Set canvas resolution
+                canvas.width = canvasWidth * window.devicePixelRatio;
+                canvas.height = canvasHeight * window.devicePixelRatio;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                
+                // Draw static waveform (blue)
+                const barCount = 100;
+                const barWidth = canvasWidth / barCount;
+                
+                ctx.fillStyle = '#3B82F6'; // Blue color for static waveform
+                
+                for (let i = 0; i < barCount; i++) {
+                    // Generate realistic static waveform pattern
+                    const normalizedIndex = i / barCount;
+                    const amplitude = Math.sin(normalizedIndex * Math.PI * 4) * 0.3 + 
+                                    Math.sin(normalizedIndex * Math.PI * 8) * 0.2 + 
+                                    Math.random() * 0.1;
+                    const barHeight = Math.max(2, Math.abs(amplitude) * canvasHeight * 0.8);
+                    
+                    const x = i * barWidth;
+                    const y = (canvasHeight - barHeight) / 2;
+                    
+                    ctx.fillRect(x, y, barWidth - 1, barHeight);
+                }
+                
+                console.log(`📊 Drew static waveform on ${mode} canvas`);
+            }
+            
+            function startLiveVisualization() {
+                if (!analyser || !dataArray) {
+                    console.warn('⚠️ Analyser or dataArray not available for live visualization');
+                    return;
+                }
+                
+                const ctx = canvas.getContext('2d');
+                const canvasWidth = canvas.offsetWidth || 800;
+                const canvasHeight = canvas.offsetHeight || 64;
+                
+                // Set canvas resolution
+                canvas.width = canvasWidth * window.devicePixelRatio;
+                canvas.height = canvasHeight * window.devicePixelRatio;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+                
+                console.log(`🎬 Starting live animation for ${mode} canvas (${canvasWidth}x${canvasHeight})`);
+                
+                function animate() {
+                    if (!analyser || !dataArray) return;
+                    
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    // Clear canvas
+                    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    
+                    // Draw live waveform (green)
+                    const barCount = 100;
+                    const barWidth = canvasWidth / barCount;
+                    
+                    ctx.fillStyle = '#10B981'; // Green color for live visualization
+                    
+                    for (let i = 0; i < barCount; i++) {
+                        const dataIndex = Math.floor((i / barCount) * dataArray.length);
+                        const barHeight = Math.max(2, (dataArray[dataIndex] / 255) * canvasHeight * 0.8);
+                        
+                        const x = i * barWidth;
+                        const y = (canvasHeight - barHeight) / 2;
+                        
+                        ctx.fillRect(x, y, barWidth - 1, barHeight);
+                    }
+                    
+                    animationId = requestAnimationFrame(animate);
+                }
+                
+                animate();
+            }
+            
+            function stopLiveVisualization() {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                    console.log(`⏹️ Stopped live visualization for ${mode} mode`);
+                }
+            }
+        }
+
+        // Initialize live visualization when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 DOM loaded, setting up waveform visualization');
+            setupLiveWaveformVisualization();
+            
+            // Also setup when new audio elements are added dynamically
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element node
+                            const audioElements = node.querySelectorAll ? node.querySelectorAll('audio') : [];
+                            const canvasElements = node.querySelectorAll ? node.querySelectorAll('canvas[id*="waveform"]') : [];
+                            
+                            if (node.tagName === 'AUDIO' || audioElements.length > 0 || canvasElements.length > 0) {
+                                console.log('🔄 New audio/canvas elements detected, reinitializing visualization');
+                                setTimeout(setupLiveWaveformVisualization, 500);
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+
     </script>
 </body>
 </html> 

@@ -1,0 +1,47 @@
+{
+  "demo_files": [
+    {
+      "id": "yuri_kizaki",
+      "display_name": "Yuri Kizaki",
+      "filename": "Yuri_Kizaki.mp3",
+      "language": "ja",
+      "description": "Japanese audio message about website communication",
+      "duration": "00:01:45",
+      "url": "https://www.mitsue.co.jp/service/audio_and_video/audio_production/media/narrators_sample/yuri_kizaki/03.mp3"
+    },
+    {
+      "id": "film_podcast",
+      "display_name": "Film Podcast",
+      "filename": "Film_Podcast.mp3",
+      "language": "fr",
+      "description": "French podcast discussing various films and cinema",
+      "duration": "00:03:32",
+      "url": "https://www.lightbulblanguages.co.uk/resources/audio/film-podcast.mp3"
+    },
+    {
+      "id": "tamil_interview",
+      "display_name": "Tamil Wikipedia Interview",
+      "filename": "Tamil_Wikipedia_Interview.ogg",
+      "language": "ta",
+      "description": "Discussion on Tamil Wikipedia and collaborative knowledge sharing (Note: Will use mBART50 fallback)",
+      "duration": "00:36:17",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/54/Parvathisri-Wikipedia-Interview-Vanavil-fm.ogg"
+    },
+    {
+      "id": "car_trouble",
+      "display_name": "Car Trouble",
+      "filename": "Car_Trouble.mp3",
+      "language": "hi",
+      "description": "Conversation about waiting for a mechanic and basic assistance",
+      "duration": "00:02:45",
+      "url": "https://www.tuttlepublishing.com/content/docs/9780804844383/06-18%20Part2%20Car%20Trouble.mp3"
+    }
+  ],
+  "settings": {
+    "demo_audio_dir": "demo_audio",
+    "demo_results_dir": "demo_results",
+    "auto_preprocess": true,
+    "max_concurrent_downloads": 2,
+    "download_timeout": 300
+  }
+}
