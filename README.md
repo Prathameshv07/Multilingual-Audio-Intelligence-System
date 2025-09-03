@@ -5,7 +5,7 @@ colorFrom: blue
 colorTo: purple
 sdk: docker
 pinned: false
-short_description: Advanced AI system for multilingual transcription and translation with Indian language support
+short_description: AI for multilingual transcription & Indian language support
 ---
 
 # 🎵 Enhanced Multilingual Audio Intelligence System
