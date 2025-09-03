@@ -21,7 +21,7 @@ from datetime import datetime
 # Core imports
 import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from faster_whisper import WhisperModel
+import whisper
 from pyannote.audio import Pipeline
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
@@ -386,13 +386,11 @@ class ModelPreloader:
             logger.error(f"Pyannote loading failed: {e}")
             return None
     
-    def load_whisper_model(self, task_id: str) -> Optional[WhisperModel]:
+    def load_whisper_model(self, task_id: str) -> Optional[whisper.Whisper]:
         """Load Whisper speech recognition model with enhanced cache checking."""
         try:
             console.print(f"[yellow]Loading Whisper model (small)...[/yellow]")
             
-            # Determine compute type based on device
-            compute_type = "int8" if self.device == "cpu" else "float16"
             whisper_cache_dir = self.cache_dir / "whisper"
             
             # Check if we have valid local files
@@ -403,21 +401,15 @@ class ModelPreloader:
             else:
                 console.print(f"[yellow]No valid local Whisper cache found, will download...[/yellow]")
             
-            # faster-whisper handles caching automatically, but we specify our cache dir
-            model = WhisperModel(
-                "small",
-                device=self.device,
-                compute_type=compute_type,
-                download_root=str(whisper_cache_dir)
-            )
+            # OpenAI Whisper handles caching automatically
+            model = whisper.load_model("small", device=self.device)
             
             # Test the model with a dummy audio array
             import numpy as np
             dummy_audio = np.zeros(16000, dtype=np.float32)  # 1 second of silence
-            segments, info = model.transcribe(dummy_audio, language="en")
-            list(segments)  # Force evaluation
+            result = model.transcribe(dummy_audio, language="en")
             
-            console.print(f"[green]✓ Whisper model loaded successfully on {self.device} with {compute_type}[/green]")
+            console.print(f"[green]✓ Whisper model loaded successfully on {self.device}[/green]")
             
             return model
             
