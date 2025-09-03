@@ -64,11 +64,11 @@ CMD ["python", "-c", "\
 import os; \
 import subprocess; \
 import time; \
-print('🚀 Starting Multilingual Audio Intelligence System...'); \
-for dir in ['uploads', 'outputs', 'model_cache', 'temp_files', 'demo_results', '/tmp/matplotlib', '/tmp/fontconfig']: \
-    os.makedirs(dir, mode=0o777, exist_ok=True); \
+print('Starting Multilingual Audio Intelligence System...'); \
+dirs = ['uploads', 'outputs', 'model_cache', 'temp_files', 'demo_results', '/tmp/matplotlib', '/tmp/fontconfig']; \
+[os.makedirs(d, mode=0o777, exist_ok=True) for d in dirs]; \
 subprocess.run(['python', 'model_preloader.py']); \
-print('✅ Models loaded successfully'); \
+print('Models loaded successfully'); \
 import uvicorn; \
 uvicorn.run('web_app:app', host='0.0.0.0', port=7860, workers=1, log_level='info')\
 "]
