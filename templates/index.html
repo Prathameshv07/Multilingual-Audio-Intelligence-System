@@ -2152,7 +2152,10 @@
             const endedListener = () => {
                 console.log(`⏹️ ${mode} audio ended`);
                 stopLiveVisualization();
-                drawStaticWaveform();
+                // Only draw static waveform for demo mode, not for full processing mode
+                // if (mode === 'demo') {
+                //     drawStaticWaveform();
+                // }
             };
             
             // Add listeners

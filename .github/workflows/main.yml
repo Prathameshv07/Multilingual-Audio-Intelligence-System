@@ -38,7 +38,10 @@ jobs:
 
       - name: Upload to Google Drive
         env:
+          # Primary authentication method (OAuth)
           GOOGLE_OAUTH_TOKEN: ${{ secrets.GOOGLE_OAUTH_TOKEN }}
+          # Fallback authentication method (Service Account)
+          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
         run: python .github/workflows/scripts/upload_to_drive.py
 
       - name: Push to Hugging Face hub

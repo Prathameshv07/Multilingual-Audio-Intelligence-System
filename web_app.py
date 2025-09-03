@@ -812,6 +812,8 @@ async def get_results(task_id: str):
     # Return actual processed results
     if task_id in processing_results:
         results = processing_results[task_id]
+        logger.info(f"📊 Found results for task {task_id}: {type(results)}")
+        logger.info(f"📊 Results keys: {list(results.keys()) if isinstance(results, dict) else 'Not a dict'}")
 
         # Convert to the expected format for frontend
         formatted_results = {
@@ -878,11 +880,12 @@ async def get_results(task_id: str):
                 }
             }
 
-            return JSONResponse({
-                "task_id": task_id,
-                "status": "complete",
-                "results": formatted_results
-            })
+        logger.info(f"📤 Returning formatted results for task {task_id}: {len(formatted_results.get('segments', []))} segments")
+        return JSONResponse({
+            "task_id": task_id,
+            "status": "complete",
+            "results": formatted_results
+        })
                 
     else:
         # Fallback if results not found
