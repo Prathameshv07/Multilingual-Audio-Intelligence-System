@@ -78,19 +78,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:7860/health || exit 1
 
 # Preload models and start the application
-CMD ["python", "-c", "\
-import os; \
-import subprocess; \
-import time; \
-print('Starting Multilingual Audio Intelligence System...'); \
-dirs = ['uploads', 'outputs', 'model_cache', 'temp_files', 'demo_results', '/tmp/matplotlib', '/tmp/fontconfig']; \
-[os.makedirs(d, mode=0o777, exist_ok=True) for d in dirs]; \
-try: \
-    subprocess.run(['python', 'model_preloader.py'], check=True); \
-    print('Models loaded successfully'); \
-except Exception as e: \
-    print(f'Model preloading failed: {e}'); \
-    print('Continuing without preloaded models...'); \
-import uvicorn; \
-uvicorn.run('web_app:app', host='0.0.0.0', port=7860, workers=1, log_level='info')\
-"]
+CMD ["python", "startup.py"]
