@@ -1,5 +1,5 @@
 ---
-title: Enhanced Multilingual Audio Intelligence System
+title: Multilingual Audio Intelligence System
 emoji: 🎵
 colorFrom: blue
 colorTo: purple
@@ -8,7 +8,7 @@ pinned: false
 short_description: AI for multilingual transcription & Indian language support
 ---
 
-# 🎵 Enhanced Multilingual Audio Intelligence System
+# 🎵 Multilingual Audio Intelligence System
 
 <p align="center">
   <img src="static/imgs/banner.png" alt="Multilingual Audio Intelligence System Banner" style="border: 1px solid black"/>
@@ -48,10 +48,10 @@ This AI-powered platform combines speaker diarization, automatic speech recognit
 
 The system includes sample audio files for testing and demonstration:
 
-- **Japanese Business Audio**: Professional voice message about website communication
-- **French Film Podcast**: Discussion about movies including Social Network and Paranormal Activity
-- **Tamil Wikipedia Interview**: Tamil language interview on collaborative knowledge sharing (36+ minutes)
-- **Hindi Car Trouble**: Hindi conversation about daily life scenarios (2:45)
+- [Japanese Business Audio](https://www.mitsue.co.jp/service/audio_and_video/audio_production/media/narrators_sample/yuri_kizaki/03.mp3): Professional voice message about website communication
+- [French Film Podcast](https://www.lightbulblanguages.co.uk/resources/audio/film-podcast.mp3): Discussion about movies including Social Network and Paranormal Activity
+- [Tamil Wikipedia Interview](https://commons.wikimedia.org/wiki/File:Parvathisri-Wikipedia-Interview-Vanavil-fm.ogg): Tamil language interview on collaborative knowledge sharing (36+ minutes)
+- [Hindi Car Trouble](https://www.tuttlepublishing.com/content/docs/9780804844383/06-18%20Part2%20Car%20Trouble.mp3): Hindi conversation about daily life scenarios (2:45)
 
 ### Demo Features
 - **Pre-processed Results**: Cached processing for quick demonstration
@@ -111,7 +111,7 @@ The system includes sample audio files for testing and demonstration:
 ### **1. Environment Setup**
 ```bash
 # Clone the enhanced repository
-git clone https://github.com/YourUsername/Enhanced-Multilingual-Audio-Intelligence-System.git
+git clone https://github.com/Prathameshv07/Multilingual-Audio-Intelligence-System.git
 cd Enhanced-Multilingual-Audio-Intelligence-System
 
 # Create conda environment (recommended)
@@ -153,34 +153,34 @@ python run_app.py --mode test    # System testing
 
 ```
 Enhanced-Multilingual-Audio-Intelligence-System/
-├── run_app.py                      # 🆕 Single entry point for all modes
-├── web_app.py                      # Enhanced FastAPI application
-├── src/                            # 🆕 Organized source modules
-│   ├── main.py                     # Enhanced pipeline orchestrator
-│   ├── audio_processor.py          # Enhanced with smart file management
-│   ├── speaker_diarizer.py         # pyannote.audio integration
-│   ├── speech_recognizer.py        # faster-whisper integration
-│   ├── translator.py               # 🆕 3-tier hybrid translation system
-│   ├── output_formatter.py         # Multi-format output generation
-│   ├── demo_manager.py             # Enhanced demo file management
-│   ├── ui_components.py            # Interactive UI components
-│   └── utils.py                    # Enhanced utility functions
-├── demo_audio/                     # Enhanced demo files
-│   ├── Yuri_Kizaki.mp3            # Japanese business communication
-│   ├── Film_Podcast.mp3            # French cinema discussion
-│   ├── Tamil_Wikipedia_Interview.ogg  # 🆕 Tamil language interview
-│   └── Car_Trouble.mp3             # 🆕 Hindi daily conversation
+├── run_app.py                         # Single entry point for all modes
+├── web_app.py                         # Enhanced FastAPI application
+├── src/                               # Organized source modules
+│   ├── main.py                        # Enhanced pipeline orchestrator
+│   ├── audio_processor.py             # Enhanced with smart file management
+│   ├── speaker_diarizer.py            # pyannote.audio integration
+│   ├── speech_recognizer.py           # faster-whisper integration
+│   ├── translator.py                  # 3-tier hybrid translation system
+│   ├── output_formatter.py            # Multi-format output generation
+│   ├── demo_manager.py                # Enhanced demo file management
+│   ├── ui_components.py               # Interactive UI components
+│   └── utils.py                       # Enhanced utility functions
+├── demo_audio/                        # Enhanced demo files
+│   ├── Yuri_Kizaki.mp3                # Japanese business communication
+│   ├── Film_Podcast.mp3               # French cinema discussion
+│   ├── Tamil_Wikipedia_Interview.ogg  # Tamil language interview
+│   └── Car_Trouble.mp3                # Hindi daily conversation
 ├── templates/
-│   └── index.html                  # Enhanced UI with Indian language support
+│   └── index.html                     # Enhanced UI with Indian language support
 ├── static/
-│   └── imgs/                       # Enhanced screenshots and assets
-├── model_cache/                    # Intelligent model caching
-├── outputs/                        # Processing results
-├── requirements.txt                # Enhanced dependencies
-├── README.md                       # This enhanced documentation
-├── DOCUMENTATION.md                # 🆕 Comprehensive technical docs
-├── TECHNICAL_UNDERSTANDING.md      # 🆕 System architecture guide
-└── files_which_are_not_needed/     # 🆕 Archived legacy files
+│   └── imgs/                          # Enhanced screenshots and assets
+├── model_cache/                       # Intelligent model caching
+├── outputs/                           # Processing results
+├── requirements.txt                   # Enhanced dependencies
+├── README.md                          # This enhanced documentation
+├── DOCUMENTATION.md                   # Comprehensive technical docs
+├── TECHNICAL_UNDERSTANDING.md         # System architecture guide
+└── files_which_are_not_needed/        # Archived legacy files
 ```
 
 ## 🌟 Enhanced Usage Examples
@@ -245,23 +245,6 @@ MAX_FILE_SIZE_MB=200                       # Smart file size limit
 - **Translation Tiers**: Configurable priority and fallback behavior  
 - **Device Selection**: CPU (recommended), CUDA (if available)
 - **Cache Management**: Automatic model caching and cleanup
-
-## Problem Statement 6 Alignment
-
-This system addresses **PS-6: "Language-Agnostic Speaker Identification/Verification & Diarization; and subsequent Transcription & Translation System"** with the following capabilities:
-
-### **Current Implementation (70% Coverage)**
-- ✅ **Speaker Diarization**: pyannote.audio for "who spoke when" analysis
-- ✅ **Multilingual ASR**: faster-whisper with automatic language detection
-- ✅ **Neural Translation**: Multi-tier system for 100+ languages
-- ✅ **Audio Format Support**: WAV, MP3, OGG, FLAC, M4A
-- ✅ **User Interface**: Transcripts, visualizations, and translations
-
-### **Enhanced Features (95% Complete)**
-- ✅ **Advanced Speaker Verification**: Multi-model speaker identification with SpeechBrain, Wav2Vec2, and enhanced feature extraction
-- ✅ **Advanced Noise Reduction**: ML-based enhancement with Sepformer, Demucs, and advanced signal processing
-- ✅ **Enhanced Code-switching**: Improved support for mixed language audio with context awareness
-- ✅ **Performance Optimization**: Real-time processing with advanced caching and optimization
 
 ## System Advantages
 
@@ -335,7 +318,7 @@ docker run -p 8000:7860 audio-intelligence
 ### **Hugging Face Spaces**
 ```yaml
 # spaces.yaml
-title: Enhanced Multilingual Audio Intelligence System
+title: Multilingual Audio Intelligence System
 emoji: 🎵
 colorFrom: blue
 colorTo: purple

@@ -24,8 +24,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Create necessary directories with proper permissions
+# Fixed: Use 777 permissions for directories that need write access
 RUN mkdir -p templates static uploads outputs model_cache temp_files demo_results demo_audio \
-    && chmod -R 755 templates static uploads outputs model_cache temp_files demo_results demo_audio
+    /tmp/matplotlib /tmp/fontconfig \
+    && chmod -R 777 templates static \
+    && chmod -R 777 uploads outputs model_cache temp_files demo_results demo_audio \
+    && chmod -R 777 /tmp/matplotlib /tmp/fontconfig
 
 # Set environment variables for Hugging Face Spaces
 ENV PYTHONPATH=/app \
@@ -44,7 +48,8 @@ ENV PYTHONPATH=/app \
     PYANNOTE_CACHE=/app/model_cache \
     MPLCONFIGDIR=/tmp/matplotlib \
     HUGGINGFACE_HUB_CACHE=/app/model_cache \
-    HF_HUB_CACHE=/app/model_cache
+    HF_HUB_CACHE=/app/model_cache \
+    FONTCONFIG_PATH=/tmp/fontconfig
 
 # Expose port for Hugging Face Spaces
 EXPOSE 7860
@@ -54,4 +59,16 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:7860/api/system-info || exit 1
 
 # Preload models and start the application
-CMD ["python", "-c", "import subprocess; import time; print('🚀 Starting Enhanced Multilingual Audio Intelligence System...'); subprocess.run(['python', 'model_preloader.py']); print('✅ Models loaded successfully'); import uvicorn; uvicorn.run('web_app:app', host='0.0.0.0', port=7860, workers=1, log_level='info')"]
+# Fixed: Ensure directories exist with proper permissions at runtime
+CMD ["python", "-c", "\
+import os; \
+import subprocess; \
+import time; \
+print('🚀 Starting Multilingual Audio Intelligence System...'); \
+for dir in ['uploads', 'outputs', 'model_cache', 'temp_files', 'demo_results', '/tmp/matplotlib', '/tmp/fontconfig']: \
+    os.makedirs(dir, mode=0o777, exist_ok=True); \
+subprocess.run(['python', 'model_preloader.py']); \
+print('✅ Models loaded successfully'); \
+import uvicorn; \
+uvicorn.run('web_app:app', host='0.0.0.0', port=7860, workers=1, log_level='info')\
+"]

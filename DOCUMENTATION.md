@@ -1,12 +1,12 @@
-# Enhanced Multilingual Audio Intelligence System - Technical Documentation
+# Multilingual Audio Intelligence System - Technical Documentation
 
 ## 1. Project Overview
 
-The Enhanced Multilingual Audio Intelligence System is an AI-powered platform that combines speaker diarization, automatic speech recognition, and neural machine translation to deliver comprehensive audio analysis capabilities. This system processes multilingual audio content with support for Indian languages, identifies individual speakers, transcribes speech with high accuracy, and provides translations across 100+ languages through a multi-tier fallback system, transforming raw audio into structured, actionable insights.
+The Multilingual Audio Intelligence System is an AI-powered platform that combines speaker diarization, automatic speech recognition, and neural machine translation to deliver comprehensive audio analysis capabilities. This system processes multilingual audio content with support for Indian languages, identifies individual speakers, transcribes speech with high accuracy, and provides translations across 100+ languages through a multi-tier fallback system, transforming raw audio into structured, actionable insights.
 
 ## 2. Objective
 
-The primary objective of the Enhanced Multilingual Audio Intelligence System is to provide comprehensive audio content analysis capabilities by:
+The primary objective of the Multilingual Audio Intelligence System is to provide comprehensive audio content analysis capabilities by:
 
 - **Language Support**: Support for Tamil, Hindi, Telugu, Gujarati, Kannada, and other regional languages
 - **Multi-Tier Translation**: Fallback system ensuring broad translation coverage across language pairs
@@ -180,7 +180,7 @@ The application includes a demo mode for testing without waiting for full model 
 - Available demos:
   - [Yuri_Kizaki.mp3](https://www.mitsue.co.jp/service/audio_and_video/audio_production/media/narrators_sample/yuri_kizaki/03.mp3) — Japanese narration about website communication
   - [Film_Podcast.mp3](https://www.lightbulblanguages.co.uk/resources/audio/film-podcast.mp3) — French podcast discussing films like The Social Network
-  - [Tamil_Wikipedia_Interview.ogg](https://commons.wikimedia.org/wiki/File:Tamil_Wikipedia_Interview.ogg) — Tamil language interview (36+ minutes)
+  - [Tamil_Wikipedia_Interview.ogg](https://commons.wikimedia.org/wiki/File:Parvathisri-Wikipedia-Interview-Vanavil-fm.ogg) — Tamil language interview (36+ minutes)
   - [Car_Trouble.mp3](https://www.tuttlepublishing.com/content/docs/9780804844383/06-18%20Part2%20Car%20Trouble.mp3) — Conversation about waiting for a mechanic and basic assistance (2:45)
 - Static serving: demo audio is exposed at `/demo_audio/<filename>` for local preview.
 - The UI provides enhanced selectable cards under Demo Mode; once selected, the system loads a preview and renders a waveform using HTML5 Canvas (Web Audio API) before processing.

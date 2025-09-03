@@ -1,8 +1,8 @@
-# Technical Understanding - Enhanced Multilingual Audio Intelligence System
+# Technical Understanding - Multilingual Audio Intelligence System
 
 ## Architecture Overview
 
-This document provides technical insights into the enhanced multilingual audio intelligence system, designed to address comprehensive audio analysis requirements. The system incorporates **Indian language support**, **multi-tier translation**, **waveform visualization**, and **optimized performance** for various deployment scenarios.
+This document provides technical insights into the multilingual audio intelligence system, designed to address comprehensive audio analysis requirements. The system incorporates **Indian language support**, **multi-tier translation**, **waveform visualization**, and **optimized performance** for various deployment scenarios.
 
 ## System Architecture
 
