@@ -68,7 +68,11 @@ ENV PYTHONPATH=/app \
     CTRANSLATE2_FORCE_CPU_ISA=generic \
     # Disable problematic features
     TF_CPP_MIN_LOG_LEVEL=2 \
-    TOKENIZERS_PARALLELISM=false
+    TOKENIZERS_PARALLELISM=false \
+    # Fix executable stack issues
+    ONNX_EXECUTION_PROVIDER=cpu \
+    # Disable problematic optimizations
+    OMP_NUM_THREADS=1
 
 # Expose port for Hugging Face Spaces
 EXPOSE 7860

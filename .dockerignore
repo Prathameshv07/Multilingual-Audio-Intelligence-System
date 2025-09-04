@@ -1,0 +1,58 @@
+# Ignore cache and temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Ignore model cache (will be downloaded fresh)
+model_cache/
+outputs/
+uploads/
+temp_files/
+demo_results/
+
+# Ignore development files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore documentation
+*.md
+!README.md
+
+# Ignore test files
+test_*.py
+*_test.py
+tests/
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.log
