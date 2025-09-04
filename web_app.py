@@ -44,8 +44,11 @@ import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables with error handling
+try:
+    load_dotenv()
+except Exception as e:
+    logging.warning(f"Could not load .env file: {e}")
 
 # Add src directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))

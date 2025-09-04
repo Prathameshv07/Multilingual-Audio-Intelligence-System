@@ -58,12 +58,21 @@ def preload_models():
         import model_preloader
         logger.info('✅ Model preloader module found')
         
+        # Set environment variables to handle onnxruntime issues
+        env = os.environ.copy()
+        env.update({
+            'ONNX_EXECUTION_PROVIDER': 'cpu',
+            'DISABLE_ONNX_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+            'TF_ENABLE_ONEDNN_OPTS': '0'
+        })
+        
         # Try to run the preloader
         result = subprocess.run(
             ['python', 'model_preloader.py'], 
             capture_output=True, 
             text=True, 
-            timeout=300  # 5 minute timeout
+            timeout=300,  # 5 minute timeout
+            env=env
         )
         
         if result.returncode == 0:
@@ -74,7 +83,11 @@ def preload_models():
         else:
             logger.warning(f'⚠️ Model preloading failed with return code {result.returncode}')
             if result.stderr:
-                logger.warning(f'Preloader stderr: {result.stderr[:500]}...')
+                # Check if it's the onnxruntime issue
+                if 'cannot enable executable stack' in result.stderr:
+                    logger.warning('⚠️ ONNX Runtime executable stack issue detected - this is expected in containers')
+                else:
+                    logger.warning(f'Preloader stderr: {result.stderr[:500]}...')
             return False
             
     except subprocess.TimeoutExpired:

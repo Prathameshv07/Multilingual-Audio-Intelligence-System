@@ -266,7 +266,7 @@ class ModelPreloader:
                         torch_dtype=torch.float32 if self.device == "cpu" else torch.float16
                     )
                     
-                    console.print(f"[green]✓ Successfully loaded {model_name} from local cache[/green]")
+                    console.print(f"[green]SUCCESS: Successfully loaded {model_name} from local cache[/green]")
                     
                 except Exception as e:
                     console.print(f"[yellow]Local cache load failed for {model_name}, will download: {e}[/yellow]")
@@ -286,7 +286,7 @@ class ModelPreloader:
                     torch_dtype=torch.float32 if self.device == "cpu" else torch.float16
                 )
                 
-                console.print(f"[green]✓ Successfully downloaded and loaded {model_name}[/green]")
+                console.print(f"[green]SUCCESS: Successfully downloaded and loaded {model_name}[/green]")
             
             # Move to device if needed
             if self.device != "cpu":
@@ -377,12 +377,12 @@ class ModelPreloader:
             )
             
             # Test the pipeline
-            console.print(f"[green]✓ pyannote.audio pipeline loaded successfully on {self.device}[/green]")
+            console.print(f"[green]SUCCESS: pyannote.audio pipeline loaded successfully on {self.device}[/green]")
             
             return pipeline
             
         except Exception as e:
-            console.print(f"[red]✗ Failed to load pyannote.audio pipeline: {e}[/red]")
+            console.print(f"[red]ERROR: Failed to load pyannote.audio pipeline: {e}[/red]")
             logger.error(f"Pyannote loading failed: {e}")
             return None
     
@@ -409,12 +409,12 @@ class ModelPreloader:
             dummy_audio = np.zeros(16000, dtype=np.float32)  # 1 second of silence
             result = model.transcribe(dummy_audio, language="en")
             
-            console.print(f"[green]✓ Whisper model loaded successfully on {self.device}[/green]")
+            console.print(f"[green]SUCCESS: Whisper model loaded successfully on {self.device}[/green]")
             
             return model
             
         except Exception as e:
-            console.print(f"[red]✗ Failed to load Whisper model: {e}[/red]")
+            console.print(f"[red]ERROR: Failed to load Whisper model: {e}[/red]")
             logger.error(f"Whisper loading failed: {e}")
             return None
     
@@ -444,7 +444,7 @@ class ModelPreloader:
         sys_info = self.get_system_info()
         
         info_panel = Panel.fit(
-            f"""🖥️  System Information
+            f"""System Information
             
 • CPU Cores: {sys_info['cpu_count']}
 • Total Memory: {sys_info['memory_gb']} GB
@@ -487,7 +487,7 @@ class ModelPreloader:
                 
                 # Check cache first
                 if self.check_model_cache(model_key):
-                    console.print(f"[green]✓ {config['description']} found in cache[/green]")
+                    console.print(f"[green]SUCCESS: {config['description']} found in cache[/green]")
                     progress.update(task_id, completed=100)
                     progress.update(main_task, advance=1)
                     results["models"][model_key] = {"status": "cached", "time": 0}
@@ -541,13 +541,13 @@ class ModelPreloader:
         # Summary
         console.print()
         if results["success_count"] == results["total_count"]:
-            status_text = "[bold green]✓ All models loaded successfully![/bold green]"
+            status_text = "[bold green]SUCCESS: All models loaded successfully![/bold green]"
             status_color = "green"
         elif results["success_count"] > 0:
-            status_text = f"[bold yellow]⚠ {results['success_count']}/{results['total_count']} models loaded[/bold yellow]"
+            status_text = f"[bold yellow]WARNING: {results['success_count']}/{results['total_count']} models loaded[/bold yellow]"
             status_color = "yellow"
         else:
-            status_text = "[bold red]✗ No models loaded successfully[/bold red]"
+            status_text = "[bold red]ERROR: No models loaded successfully[/bold red]"
             status_color = "red"
         
         summary_panel = Panel.fit(
@@ -577,8 +577,9 @@ class ModelPreloader:
 
 def main():
     """Main function to run model preloading."""
+    # Use ASCII-safe characters for Windows compatibility
     console.print(Panel.fit(
-        "[bold blue]🎵 Multilingual Audio Intelligence System[/bold blue]\n[yellow]Model Preloader[/yellow]",
+        "[bold blue]Multilingual Audio Intelligence System[/bold blue]\n[yellow]Model Preloader[/yellow]",
         border_style="blue"
     ))
     console.print()
@@ -591,11 +592,11 @@ def main():
         results = preloader.preload_all_models()
         
         if results["success_count"] > 0:
-            console.print("\n[bold green]✓ Model preloading completed![/bold green]")
+            console.print("\n[bold green]SUCCESS: Model preloading completed![/bold green]")
             console.print(f"[dim]Models cached in: {preloader.cache_dir}[/dim]")
             return True
         else:
-            console.print("\n[bold red]✗ Model preloading failed![/bold red]")
+            console.print("\n[bold red]ERROR: Model preloading failed![/bold red]")
             return False
             
     except KeyboardInterrupt:

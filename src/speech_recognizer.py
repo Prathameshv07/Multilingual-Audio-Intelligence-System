@@ -55,6 +55,9 @@ class TranscriptionSegment:
     language_probability: float
     no_speech_probability: float
     words: Optional[List[Dict]] = None
+    speaker_id: Optional[str] = None
+    confidence: Optional[float] = None
+    word_timestamps: Optional[List[Dict]] = None
 
 
 class SpeechRecognizer:
@@ -160,7 +163,10 @@ class SpeechRecognizer:
                     language=result.get("language", "unknown"),
                     language_probability=result.get("language_probability", 1.0),
                     no_speech_probability=segment.get("no_speech_prob", 0.0),
-                    words=words
+                    words=words,
+                    speaker_id=None,
+                    confidence=1.0 - segment.get("no_speech_prob", 0.0),
+                    word_timestamps=words
                 ))
             
             return segments
@@ -193,6 +199,77 @@ class SpeechRecognizer:
             logger.error(f"File transcription failed: {e}")
             raise
     
+    def transcribe_segments(self, audio_data: np.ndarray, sample_rate: int, 
+                           speaker_segments: List[Tuple[float, float, str]], 
+                           word_timestamps: bool = True) -> List[TranscriptionSegment]:
+        """
+        Transcribe audio segments with speaker information.
+        
+        Args:
+            audio_data: Audio data as numpy array
+            sample_rate: Sample rate of the audio
+            speaker_segments: List of (start_time, end_time, speaker_id) tuples
+            word_timestamps: Whether to include word-level timestamps
+            
+        Returns:
+            List of TranscriptionSegment objects with speaker information
+        """
+        if self.model is None:
+            raise RuntimeError("Model not initialized")
+        
+        try:
+            # Prepare audio for Whisper (expects 16kHz)
+            if sample_rate != 16000:
+                import librosa
+                audio_data = librosa.resample(audio_data, orig_sr=sample_rate, target_sr=16000)
+            
+            # Transcribe the entire audio first
+            result = self.model.transcribe(
+                audio_data,
+                language=self.language,
+                word_timestamps=word_timestamps,
+                verbose=False
+            )
+            
+            # Convert to our format and add speaker information
+            segments = []
+            for segment in result["segments"]:
+                # Find the speaker for this segment
+                speaker_id = "Unknown"
+                for start_time, end_time, spk_id in speaker_segments:
+                    if (segment["start"] >= start_time and segment["end"] <= end_time):
+                        speaker_id = spk_id
+                        break
+                
+                words = []
+                if word_timestamps and "words" in segment:
+                    for word in segment["words"]:
+                        words.append({
+                            "word": word["word"],
+                            "start": word["start"],
+                            "end": word["end"],
+                            "probability": word.get("probability", 1.0)
+                        })
+                
+                segments.append(TranscriptionSegment(
+                    start=segment["start"],
+                    end=segment["end"],
+                    text=segment["text"].strip(),
+                    language=result.get("language", "unknown"),
+                    language_probability=result.get("language_probability", 1.0),
+                    no_speech_probability=segment.get("no_speech_prob", 0.0),
+                    words=words,
+                    speaker_id=speaker_id,  # Add speaker information
+                    confidence=1.0 - segment.get("no_speech_prob", 0.0),
+                    word_timestamps=words
+                ))
+            
+            return segments
+            
+        except Exception as e:
+            logger.error(f"Segment transcription failed: {e}")
+            raise
+
     def get_supported_languages(self) -> List[str]:
         """Get list of supported language codes."""
         return [

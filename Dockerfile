@@ -72,7 +72,11 @@ ENV PYTHONPATH=/app \
     # Fix executable stack issues
     ONNX_EXECUTION_PROVIDER=cpu \
     # Disable problematic optimizations
-    OMP_NUM_THREADS=1
+    OMP_NUM_THREADS=1 \
+    # Suppress tensorboard warnings
+    TF_ENABLE_ONEDNN_OPTS=0 \
+    # Disable problematic features
+    DISABLE_ONNX_EXECUTION_PROVIDERS=CPUExecutionProvider
 
 # Expose port for Hugging Face Spaces
 EXPOSE 7860
