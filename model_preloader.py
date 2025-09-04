@@ -38,6 +38,16 @@ logger = logging.getLogger(__name__)
 
 console = Console()
 
+# CRITICAL: Set environment variables BEFORE importing any ML libraries
+# This fixes the ONNX Runtime executable stack issue in containers
+os.environ.update({
+    'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
+    'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+    'OMP_NUM_THREADS': '1',
+    'TF_ENABLE_ONEDNN_OPTS': '0',
+    'TOKENIZERS_PARALLELISM': 'false'
+})
+
 class ModelPreloader:
     """Comprehensive model preloader with enhanced local cache detection."""
     

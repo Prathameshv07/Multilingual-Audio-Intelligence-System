@@ -124,7 +124,7 @@ DEMO_FILES = {
         "expected_translation": "Audio messages enable communication beyond existing websites. By incorporating audio information into visually-driven websites, you can add new value to the information and effectively differentiate your website from others.",
         "category": "business",
         "difficulty": "intermediate",
-        "duration": "00:01:45"
+        "duration": "00:00:32"
     },
     "film_podcast": {
         "name": "Film Podcast",
@@ -137,7 +137,7 @@ DEMO_FILES = {
         "expected_translation": "The film The Social Network deals with the creation of Facebook by Mark Zuckerberg and the legal problems this caused for the creator of this site.",
         "category": "entertainment",
         "difficulty": "advanced",
-        "duration": "00:03:32"
+        "duration": "00:03:50"
     },
     "tamil_interview": {
         "name": "Tamil Wikipedia Interview",
@@ -166,7 +166,7 @@ DEMO_FILES = {
         "expected_translation": "The car has broken down. We are waiting for the mechanic. It will take some time.",
         "category": "daily_life",
         "difficulty": "beginner", 
-        "duration": "00:02:45",
+        "duration": "00:00:45",
         "featured": True,
         "new": True,
         "indian_language": True
@@ -587,7 +587,7 @@ class AudioProcessor:
         
         if self.pipeline is None:
             logger.info("Initializing Audio Intelligence Pipeline...")
-            try:
+        try:
                 self.pipeline = AudioIntelligencePipeline(
                     whisper_model_size=whisper_model,
                     target_language=target_language,
@@ -596,7 +596,7 @@ class AudioProcessor:
                     output_dir="./outputs"
                 )
                 logger.info("Pipeline initialization complete!")
-            except Exception as e:
+        except Exception as e:
                 logger.error(f"Pipeline initialization failed: {e}")
                 raise
         
@@ -740,7 +740,7 @@ async def home(request: Request):
 @app.post("/api/upload")
 async def upload_audio(
     request: Request,
-    file: UploadFile = File(...),
+            file: UploadFile = File(...),
     whisper_model: str = Form("small"),
     target_language: str = Form("en"),
     hf_token: Optional[str] = Form(None)
@@ -892,7 +892,7 @@ async def get_results(task_id: str):
                 
     else:
         # Fallback if results not found
-        return JSONResponse({
+                return JSONResponse({
             "task_id": task_id,
             "status": "complete",
             "results": {

@@ -61,9 +61,10 @@ def preload_models():
         # Set environment variables to handle onnxruntime issues
         env = os.environ.copy()
         env.update({
-            'ONNX_EXECUTION_PROVIDER': 'cpu',
-            'DISABLE_ONNX_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
-            'TF_ENABLE_ONEDNN_OPTS': '0'
+            'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
+            'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+            'TF_ENABLE_ONEDNN_OPTS': '0',
+            'OMP_NUM_THREADS': '1'
         })
         
         # Try to run the preloader

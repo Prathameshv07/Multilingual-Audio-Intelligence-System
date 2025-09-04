@@ -39,10 +39,10 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
 COPY . .
 
 # Create necessary directories with proper permissions
-RUN mkdir -p templates static uploads outputs model_cache temp_files demo_results demo_audio \
+RUN mkdir -p templates static uploads outputs model_cache temp_files demo_results demo_audio results \
     /tmp/matplotlib /tmp/fontconfig \
     && chmod -R 777 templates static \
-    && chmod -R 777 uploads outputs model_cache temp_files demo_results demo_audio \
+    && chmod -R 777 uploads outputs model_cache temp_files demo_results demo_audio results \
     && chmod -R 777 /tmp/matplotlib /tmp/fontconfig
 
 # Set environment variables for Hugging Face Spaces
@@ -64,19 +64,18 @@ ENV PYTHONPATH=/app \
     HUGGINGFACE_HUB_CACHE=/app/model_cache \
     HF_HUB_CACHE=/app/model_cache \
     FONTCONFIG_PATH=/tmp/fontconfig \
+    # Fix for ONNX Runtime in containers (KEY FIX)
+    ORT_DYLIB_DEFAULT_OPTIONS=DisableExecutablePageAllocator=1 \
+    ONNXRUNTIME_EXECUTION_PROVIDERS=CPUExecutionProvider \
     # Fix for audio processing libraries
     CTRANSLATE2_FORCE_CPU_ISA=generic \
     # Disable problematic features
     TF_CPP_MIN_LOG_LEVEL=2 \
     TOKENIZERS_PARALLELISM=false \
-    # Fix executable stack issues
-    ONNX_EXECUTION_PROVIDER=cpu \
     # Disable problematic optimizations
     OMP_NUM_THREADS=1 \
     # Suppress tensorboard warnings
-    TF_ENABLE_ONEDNN_OPTS=0 \
-    # Disable problematic features
-    DISABLE_ONNX_EXECUTION_PROVIDERS=CPUExecutionProvider
+    TF_ENABLE_ONEDNN_OPTS=0
 
 # Expose port for Hugging Face Spaces
 EXPOSE 7860

@@ -1,88 +1,55 @@
-# Hugging Face Spaces Compatible Requirements
-# Optimized for containerized deployment
-
-# Core ML Libraries (HF Spaces compatible)
+# Core ML libraries with container-friendly versions
 torch==2.0.1
-torchvision==0.15.2
 torchaudio==2.0.2
-transformers
+torchvision==0.15.2
 
-# Audio Processing (Fixed versions for HF Spaces)
-librosa==0.10.1
-pydub==0.25.1
-soundfile==0.12.1
-# Use openai-whisper instead of faster-whisper to avoid CTranslate2 issues
-openai-whisper==20231117
-audioread==3.0.1
-ffmpeg-python==0.2.0
+# Keep regular ONNX Runtime with container-safe environment variables
+onnxruntime==1.16.3
 
-# Speaker Diarization (Essential for HF Spaces)
+# Audio processing
 pyannote.audio==3.1.1
-pyannote.core
-pyannote.database
-pyannote.metrics==3.2.1
+openai-whisper==20231117
+librosa==0.10.1
+soundfile==0.12.1
+pydub==0.25.1
+webrtcvad==2.0.10
 
-# Performance & Optimization
-numba==0.58.1
-# Use CPU-only onnxruntime to avoid executable stack issues
-onnxruntime==1.16.3 
-accelerate==0.20.3
+# NLP and Translation
+transformers==4.35.2
+tokenizers==0.15.2
+sentencepiece==0.1.99
+deep-translator==1.11.4
+langdetect==1.0.9
+googletrans==4.0.2
 
-# Core Utilities
-numpy
-psutil==5.9.6
-python-dotenv==1.0.0
-requests==2.31.0
-tqdm==4.66.1
-ujson==5.8.0
-colorlog==6.7.0
-pyyaml==6.0.1
-python-dateutil==2.8.2
-
-# Web Framework
+# Web framework
 fastapi==0.104.1
-uvicorn==0.24.0
+uvicorn[standard]==0.24.0
 python-multipart==0.0.6
-jinja2==3.1.2
 websockets==12.0
 aiofiles==23.2.1
-aiohttp==3.9.1
-httpx
 
-# Translation APIs
-googletrans
-deep-translator==1.11.4
-
-# Scientific Computing
+# Data processing
+numpy==1.26.4
+pandas==2.3.2
 scipy==1.11.4
 matplotlib==3.7.3
 plotly==5.17.0
-scikit-learn==1.3.2
 
-# PS-6 Specific Dependencies (HF Spaces compatible)
-speechbrain==0.5.16
-# Remove demucs as it's causing issues in containers
-# demucs==4.0.0
-PyWavelets==1.4.1
-
-# NLP
-nltk==3.8.1
-langdetect==1.0.9
-
-# Logging & Monitoring
+# Utilities
 rich==13.7.0
+tqdm==4.66.1
+psutil==5.9.6
+pyyaml==6.0.1
+python-dotenv==1.0.0
+click==8.1.8
 
-# Machine Learning
-tensorflow==2.15.0
-# Fix tensorboard compatibility
-tensorboard==2.15.2
-
-# Additional Dependencies
+# HuggingFace ecosystem
 huggingface-hub==0.16.4
-tokenizers
-sentencepiece==0.1.99
-protobuf==3.20.3
+accelerate==0.20.3
+safetensors==0.6.2
 
-# System dependencies for audio processing
-webrtcvad==2.0.10
-resampy==0.4.2
+# Additional utilities
+ffmpeg-python==0.2.0
+httpx==0.28.1
+requests==2.31.0
