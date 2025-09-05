@@ -18,18 +18,57 @@ jobs:
           git lfs install
           git lfs pull
 
+      # NEW STEP: Check for MD file changes
+      - name: Check for MD file changes
+        id: check_md_changes
+        run: |
+          echo "Checking for markdown file changes..."
+          
+          # Get the commit message
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+          
+          # Check if commit message indicates MD changes
+          MD_IN_COMMIT=$(echo "$COMMIT_MSG" | grep -i "\.md\|markdown\|documentation\|docs\|readme" || true)
+          
+          # Check if any MD files were actually modified in the last commit
+          MD_FILES_CHANGED=$(git diff --name-only HEAD~1 HEAD | grep "\.md$" || true)
+          
+          echo "MD files in commit message: $MD_IN_COMMIT"
+          echo "MD files changed: $MD_FILES_CHANGED"
+          
+          # Skip PDF conversion if no MD files changed AND no MD-related keywords in commit
+          if [ -z "$MD_FILES_CHANGED" ] && [ -z "$MD_IN_COMMIT" ]; then
+            echo "skip_pdf=true" >> $GITHUB_OUTPUT
+            echo "Skipping PDF conversion - no MD files modified"
+          else
+            echo "skip_pdf=false" >> $GITHUB_OUTPUT
+            echo "MD files detected - will convert to PDF"
+            echo "Changed MD files: $MD_FILES_CHANGED"
+          fi
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # CONDITIONAL STEP: Only run if MD files changed
       - name: Setup system dependencies
-        run: chmod +x .github/workflows/scripts/setup_system.sh && .github/workflows/scripts/setup_system.sh
+        if: steps.check_md_changes.outputs.skip_pdf == 'false'
+        run: |
+          echo "Setting up system dependencies for PDF conversion..."
+          chmod +x .github/workflows/scripts/setup_system.sh && .github/workflows/scripts/setup_system.sh
 
+      # CONDITIONAL STEP: Only run if MD files changed
       - name: Convert MD to PDF
-        run: chmod +x .github/workflows/scripts/convert_md_to_pdf.sh && .github/workflows/scripts/convert_md_to_pdf.sh
+        if: steps.check_md_changes.outputs.skip_pdf == 'false'
+        run: |
+          echo "Converting MD files to PDF..."
+          chmod +x .github/workflows/scripts/convert_md_to_pdf.sh && .github/workflows/scripts/convert_md_to_pdf.sh
       
+      # CONDITIONAL STEP: Only run if MD files changed
       - name: Upload PDF artifacts
+        if: steps.check_md_changes.outputs.skip_pdf == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: converted-pdfs
@@ -42,7 +81,13 @@ jobs:
           GOOGLE_OAUTH_TOKEN: ${{ secrets.GOOGLE_OAUTH_TOKEN }}
           # Fallback authentication method (Service Account)
           GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-        run: python .github/workflows/scripts/upload_to_drive.py
+        run: |
+          if [ "${{ steps.check_md_changes.outputs.skip_pdf }}" = "true" ]; then
+            echo "Skipped PDF conversion - uploading existing files only"
+          else
+            echo "Uploading files including new PDFs to Google Drive"
+          fi
+          python .github/workflows/scripts/upload_to_drive.py
 
       - name: Push to Hugging Face hub
         env:

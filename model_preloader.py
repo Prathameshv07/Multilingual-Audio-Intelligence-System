@@ -397,55 +397,85 @@ class ModelPreloader:
         except Exception as e:
             logger.warning(f"Error saving cache for {model_key}: {e}")
     
-    def load_pyannote_pipeline(self, task_id: str) -> Optional[Pipeline]:
+    def load_pyannote_pipeline(self) -> Optional[Pipeline]:
         """Load pyannote speaker diarization pipeline with container-safe settings."""
         try:
             console.print(f"[yellow]Loading pyannote.audio pipeline...[/yellow]")
             
+            # Fix ONNX Runtime libraries first
+            try:
+                import subprocess
+                subprocess.run([
+                    'find', '/usr/local/lib/python*/site-packages/onnxruntime', 
+                    '-name', '*.so', '-exec', 'execstack', '-c', '{}', ';'
+                ], capture_output=True, timeout=10, stderr=subprocess.DEVNULL)
+            except:
+                pass
+            
             # Check for HuggingFace token
-            hf_token = os.getenv('HUGGINGFACE_TOKEN')
+            hf_token = os.getenv('HUGGINGFACE_TOKEN') or os.getenv('HF_TOKEN')
             if not hf_token:
                 console.print("[red]Warning: HUGGINGFACE_TOKEN not found. Some models may not be accessible.[/red]")
             
-            # Container-safe pipeline loading with error suppression
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=UserWarning)
-                warnings.filterwarnings("ignore", message=".*executable stack.*")
-                
+            # Suppress all warnings during pipeline loading
+            import warnings
+            import logging
+            
+            # Temporarily disable all warnings and logging
+            old_warning_filters = warnings.filters[:]
+            warnings.filterwarnings("ignore")
+            
+            # Disable ONNX Runtime logging
+            os.environ['ORT_LOGGING_LEVEL'] = '3'  # ERROR only
+            
+            # Disable other verbose logging
+            logging.getLogger('onnxruntime').setLevel(logging.ERROR)
+            logging.getLogger('transformers').setLevel(logging.ERROR)
+            
+            try:
                 pipeline = Pipeline.from_pretrained(
                     "pyannote/speaker-diarization-3.1",
                     use_auth_token=hf_token,
                     cache_dir=str(self.cache_dir / "pyannote")
                 )
                 
-                # Force CPU execution
+                # Force CPU execution for all models in pipeline
                 if hasattr(pipeline, '_models'):
                     for model_name, model in pipeline._models.items():
                         if hasattr(model, 'to'):
                             model.to('cpu')
-            
-            console.print(f"[green]SUCCESS: pyannote.audio pipeline loaded successfully on {self.device}[/green]")
-            return pipeline
+                
+                console.print(f"[green]SUCCESS: pyannote.audio pipeline loaded successfully on CPU[/green]")
+                return pipeline
+                
+            finally:
+                # Restore warning filters
+                warnings.filters[:] = old_warning_filters
             
         except Exception as e:
-            # Check if it's the expected ONNX Runtime warning
-            if "executable stack" in str(e).lower():
-                console.print("[yellow]ONNX Runtime executable stack warning (expected in containers) - continuing...[/yellow]")
-                # Try alternative loading method
+            error_msg = str(e).lower()
+            if "executable stack" in error_msg or "onnxruntime" in error_msg:
+                console.print("[yellow]ONNX Runtime container warning (attempting workaround)...[/yellow]")
+                
+                # Try alternative approach - load without ONNX-dependent components
                 try:
-                    import warnings
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore")
-                        pipeline = Pipeline.from_pretrained(
-                            "pyannote/speaker-diarization-3.1",
-                            use_auth_token=hf_token,
-                            cache_dir=str(self.cache_dir / "pyannote")
-                        )
-                        return pipeline
-                except:
-                    pass
+                    # Try loading with CPU-only execution providers
+                    import onnxruntime as ort
+                    ort.set_default_logger_severity(4)  # FATAL only
+                    
+                    pipeline = Pipeline.from_pretrained(
+                        "pyannote/speaker-diarization-3.1",
+                        use_auth_token=hf_token,
+                        cache_dir=str(self.cache_dir / "pyannote")
+                    )
+                    console.print(f"[green]SUCCESS: pyannote.audio loaded with workaround[/green]")
+                    return pipeline
+                    
+                except Exception as e2:
+                    console.print(f"[red]ERROR: All pyannote loading methods failed: {e2}[/red]")
+            else:
+                console.print(f"[red]ERROR: Failed to load pyannote.audio pipeline: {e}[/red]")
             
-            console.print(f"[red]ERROR: Failed to load pyannote.audio pipeline: {e}[/red]")
             logger.error(f"Pyannote loading failed: {e}")
             return None
 

@@ -70,14 +70,32 @@ def preload_models():
         import model_preloader
         logger.info('✅ Model preloader module found')
         
-        # Set environment variables to handle onnxruntime issues
+        # Set comprehensive environment variables for ONNX Runtime
         env = os.environ.copy()
         env.update({
             'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
             'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+            'ORT_DISABLE_TLS_ARENA': '1',
             'TF_ENABLE_ONEDNN_OPTS': '0',
-            'OMP_NUM_THREADS': '1'
+            'OMP_NUM_THREADS': '1',
+            'MKL_NUM_THREADS': '1',
+            'NUMBA_NUM_THREADS': '1',
+            'TOKENIZERS_PARALLELISM': 'false',
+            'MALLOC_ARENA_MAX': '2',
+            # Additional ONNX Runtime fixes
+            'ONNXRUNTIME_LOG_SEVERITY_LEVEL': '3',
+            'ORT_LOGGING_LEVEL': 'WARNING'
         })
+        
+        # Try to fix ONNX Runtime libraries before running preloader
+        try:
+            import subprocess
+            subprocess.run([
+                'find', '/usr/local/lib/python*/site-packages/onnxruntime', 
+                '-name', '*.so', '-exec', 'execstack', '-c', '{}', ';'
+            ], capture_output=True, timeout=30)
+        except:
+            pass  # Continue if execstack fix fails
         
         # Try to run the preloader
         result = subprocess.run(
@@ -96,18 +114,22 @@ def preload_models():
         else:
             logger.warning(f'⚠️ Model preloading failed with return code {result.returncode}')
             if result.stderr:
-                # Check if it's the onnxruntime issue
-                if 'cannot enable executable stack' in result.stderr:
-                    logger.warning('⚠️ ONNX Runtime executable stack issue detected - this is expected in containers')
-                else:
-                    logger.warning(f'Preloader stderr: {result.stderr[:500]}...')
+                # Filter out expected ONNX warnings
+                stderr_lines = result.stderr.split('\n')
+                important_errors = [line for line in stderr_lines 
+                                  if 'executable stack' not in line.lower() 
+                                  and 'onnxruntime' not in line.lower() 
+                                  and line.strip()]
+                if important_errors:
+                    logger.warning(f'Important errors: {important_errors[:3]}')
             return False
             
     except subprocess.TimeoutExpired:
         logger.warning('⚠️ Model preloading timed out, continuing...')
         return False
     except Exception as e:
-        logger.warning(f'⚠️ Model preloading failed: {e}')
+        if 'executable stack' not in str(e).lower():
+            logger.warning(f'⚠️ Model preloading failed: {e}')
         return False
 
 def start_web_app():

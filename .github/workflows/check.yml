@@ -20,28 +20,77 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-file-size
     if: github.event_name == 'pull_request'
+    outputs:
+      skip_pdf: ${{ steps.check_md_changes.outputs.skip_pdf }}
     steps:
       - uses: actions/checkout@v3
         with:
           lfs: true
+          fetch-depth: 0  # Need full history for git diff
 
       - name: Pull LFS files
         run: |
           git lfs install
           git lfs pull
 
+      # NEW STEP: Check if MD files were modified
+      - name: Check for MD file changes
+        id: check_md_changes
+        run: |
+          echo "Checking for markdown file changes..."
+          
+          # Get the commit message
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          if [ -z "$COMMIT_MSG" ]; then
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+          fi
+          echo "Commit message: $COMMIT_MSG"
+          
+          # Check if commit message indicates MD changes
+          MD_IN_COMMIT=$(echo "$COMMIT_MSG" | grep -i "\.md\|markdown\|documentation\|docs\|readme" || true)
+          
+          # Check if any MD files were actually modified in the diff
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            MD_FILES_CHANGED=$(git diff --name-only origin/main...HEAD | grep "\.md$" || true)
+          else
+            MD_FILES_CHANGED=$(git diff --name-only HEAD~1 HEAD | grep "\.md$" || true)
+          fi
+          
+          echo "MD files in commit message: $MD_IN_COMMIT"
+          echo "MD files changed: $MD_FILES_CHANGED"
+          
+          # Skip PDF conversion if no MD files changed AND no MD-related keywords in commit
+          if [ -z "$MD_FILES_CHANGED" ] && [ -z "$MD_IN_COMMIT" ]; then
+            echo "skip_pdf=true" >> $GITHUB_OUTPUT
+            echo "Skipping PDF conversion - no MD files modified"
+          else
+            echo "skip_pdf=false" >> $GITHUB_OUTPUT
+            echo "MD files detected - will convert to PDF"
+            echo "Changed MD files: $MD_FILES_CHANGED"
+          fi
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # CONDITIONAL STEP: Only run if MD files changed
       - name: Setup system dependencies
-        run: chmod +x .github/workflows/scripts/setup_system.sh && .github/workflows/scripts/setup_system.sh
+        if: steps.check_md_changes.outputs.skip_pdf == 'false'
+        run: |
+          echo "Setting up system dependencies for PDF conversion..."
+          chmod +x .github/workflows/scripts/setup_system.sh && .github/workflows/scripts/setup_system.sh
 
+      # CONDITIONAL STEP: Only run if MD files changed
       - name: Convert MD to PDF
-        run: chmod +x .github/workflows/scripts/convert_md_to_pdf.sh && .github/workflows/scripts/convert_md_to_pdf.sh
+        if: steps.check_md_changes.outputs.skip_pdf == 'false'
+        run: |
+          echo "Converting MD files to PDF..."
+          chmod +x .github/workflows/scripts/convert_md_to_pdf.sh && .github/workflows/scripts/convert_md_to_pdf.sh
       
+      # CONDITIONAL STEP: Only run if MD files changed
       - name: Upload PDF artifacts
+        if: steps.check_md_changes.outputs.skip_pdf == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: converted-pdfs
@@ -51,4 +100,10 @@ jobs:
       - name: Upload to Google Drive
         env:
           GOOGLE_OAUTH_TOKEN: ${{ secrets.GOOGLE_OAUTH_TOKEN }}
-        run: python .github/workflows/scripts/upload_to_drive.py
+        run: |
+          if [ "${{ steps.check_md_changes.outputs.skip_pdf }}" = "true" ]; then
+            echo "Skipped PDF conversion - uploading existing files only"
+          else
+            echo "Uploading files including new PDFs to Google Drive"
+          fi
+          python .github/workflows/scripts/upload_to_drive.py
