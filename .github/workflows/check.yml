@@ -97,6 +97,9 @@ jobs:
           path: "**/*.pdf"
           retention-days: 30
 
+      - name: Install Google API dependencies
+        run: pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+
       - name: Upload to Google Drive
         env:
           GOOGLE_OAUTH_TOKEN: ${{ secrets.GOOGLE_OAUTH_TOKEN }}
