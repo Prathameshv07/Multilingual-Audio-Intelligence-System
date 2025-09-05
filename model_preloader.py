@@ -29,6 +29,32 @@ from rich.panel import Panel
 from rich.text import Text
 import psutil
 
+# CRITICAL: Configure ONNX Runtime BEFORE any ML library imports
+import os
+os.environ.update({
+    'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
+    'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+    'ORT_DISABLE_TLS_ARENA': '1',
+    'OMP_NUM_THREADS': '1',
+    'MKL_NUM_THREADS': '1',
+    'NUMBA_NUM_THREADS': '1',
+    'TF_ENABLE_ONEDNN_OPTS': '0',
+    'TOKENIZERS_PARALLELISM': 'false',
+    'MALLOC_ARENA_MAX': '2'
+})
+
+# Import ONNX Runtime with error suppression
+try:
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="onnxruntime")
+    import onnxruntime as ort
+    # Force CPU provider only
+    ort.set_default_logger_severity(3)  # ERROR level only
+except ImportError:
+    pass
+except Exception as e:
+    print(f"ONNX Runtime warning (expected in containers): {e}")
+
 # Add src directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
@@ -372,7 +398,7 @@ class ModelPreloader:
             logger.warning(f"Error saving cache for {model_key}: {e}")
     
     def load_pyannote_pipeline(self, task_id: str) -> Optional[Pipeline]:
-        """Load pyannote speaker diarization pipeline."""
+        """Load pyannote speaker diarization pipeline with container-safe settings."""
         try:
             console.print(f"[yellow]Loading pyannote.audio pipeline...[/yellow]")
             
@@ -381,21 +407,48 @@ class ModelPreloader:
             if not hf_token:
                 console.print("[red]Warning: HUGGINGFACE_TOKEN not found. Some models may not be accessible.[/red]")
             
-            pipeline = Pipeline.from_pretrained(
-                "pyannote/speaker-diarization-3.1",
-                use_auth_token=hf_token
-            )
+            # Container-safe pipeline loading with error suppression
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=UserWarning)
+                warnings.filterwarnings("ignore", message=".*executable stack.*")
+                
+                pipeline = Pipeline.from_pretrained(
+                    "pyannote/speaker-diarization-3.1",
+                    use_auth_token=hf_token,
+                    cache_dir=str(self.cache_dir / "pyannote")
+                )
+                
+                # Force CPU execution
+                if hasattr(pipeline, '_models'):
+                    for model_name, model in pipeline._models.items():
+                        if hasattr(model, 'to'):
+                            model.to('cpu')
             
-            # Test the pipeline
             console.print(f"[green]SUCCESS: pyannote.audio pipeline loaded successfully on {self.device}[/green]")
-            
             return pipeline
             
         except Exception as e:
+            # Check if it's the expected ONNX Runtime warning
+            if "executable stack" in str(e).lower():
+                console.print("[yellow]ONNX Runtime executable stack warning (expected in containers) - continuing...[/yellow]")
+                # Try alternative loading method
+                try:
+                    import warnings
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        pipeline = Pipeline.from_pretrained(
+                            "pyannote/speaker-diarization-3.1",
+                            use_auth_token=hf_token,
+                            cache_dir=str(self.cache_dir / "pyannote")
+                        )
+                        return pipeline
+                except:
+                    pass
+            
             console.print(f"[red]ERROR: Failed to load pyannote.audio pipeline: {e}[/red]")
             logger.error(f"Pyannote loading failed: {e}")
             return None
-    
+
     def load_whisper_model(self, task_id: str) -> Optional[whisper.Whisper]:
         """Load Whisper speech recognition model with enhanced cache checking."""
         try:

@@ -4,10 +4,22 @@ Startup script for Hugging Face Spaces deployment.
 Handles model preloading and graceful fallbacks for containerized environments.
 """
 
+# Suppress ONNX Runtime warnings BEFORE any imports
+import warnings
+warnings.filterwarnings("ignore", message=".*executable stack.*")
+warnings.filterwarnings("ignore", category=UserWarning, module="onnxruntime")
+
 import os
 import subprocess
 import sys
 import logging
+
+# Set critical environment variables immediately
+os.environ.update({
+    'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
+    'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+    'ORT_DISABLE_TLS_ARENA': '1'
+})
 
 # Configure logging
 logging.basicConfig(

@@ -64,18 +64,21 @@ ENV PYTHONPATH=/app \
     HUGGINGFACE_HUB_CACHE=/app/model_cache \
     HF_HUB_CACHE=/app/model_cache \
     FONTCONFIG_PATH=/tmp/fontconfig \
-    # Fix for ONNX Runtime in containers (KEY FIX)
+    # Critical ONNX Runtime fixes for containers
     ORT_DYLIB_DEFAULT_OPTIONS=DisableExecutablePageAllocator=1 \
     ONNXRUNTIME_EXECUTION_PROVIDERS=CPUExecutionProvider \
-    # Fix for audio processing libraries
+    ORT_DISABLE_TLS_ARENA=1 \
     CTRANSLATE2_FORCE_CPU_ISA=generic \
-    # Disable problematic features
+    # Threading and memory optimizations
     TF_CPP_MIN_LOG_LEVEL=2 \
     TOKENIZERS_PARALLELISM=false \
-    # Disable problematic optimizations
     OMP_NUM_THREADS=1 \
-    # Suppress tensorboard warnings
-    TF_ENABLE_ONEDNN_OPTS=0
+    MKL_NUM_THREADS=1 \
+    NUMBA_NUM_THREADS=1 \
+    TF_ENABLE_ONEDNN_OPTS=0 \
+    # Additional security for containers
+    MALLOC_ARENA_MAX=2 \
+    PYTHONUNBUFFERED=1
 
 # Expose port for Hugging Face Spaces
 EXPOSE 7860
