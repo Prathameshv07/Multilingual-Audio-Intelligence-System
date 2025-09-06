@@ -20,7 +20,6 @@ model_cache/
 outputs/
 uploads/
 temp_files/
-demo_results/
 
 # Ignore development files
 .env
