@@ -30,30 +30,40 @@ from rich.text import Text
 import psutil
 
 # CRITICAL: Configure ONNX Runtime BEFORE any ML library imports
-import os
-os.environ.update({
-    'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
-    'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
-    'ORT_DISABLE_TLS_ARENA': '1',
-    'OMP_NUM_THREADS': '1',
-    'MKL_NUM_THREADS': '1',
-    'NUMBA_NUM_THREADS': '1',
-    'TF_ENABLE_ONEDNN_OPTS': '0',
-    'TOKENIZERS_PARALLELISM': 'false',
-    'MALLOC_ARENA_MAX': '2'
-})
+# import os
+# os.environ.update({
+#     'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
+#     'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+#     'ORT_DISABLE_TLS_ARENA': '1',
+#     'OMP_NUM_THREADS': '1',
+#     'MKL_NUM_THREADS': '1',
+#     'NUMBA_NUM_THREADS': '1',
+#     'TF_ENABLE_ONEDNN_OPTS': '0',
+#     'TOKENIZERS_PARALLELISM': 'false',
+#     'MALLOC_ARENA_MAX': '2'
+# })
 
 # Import ONNX Runtime with error suppression
-try:
-    import warnings
-    warnings.filterwarnings("ignore", category=UserWarning, module="onnxruntime")
-    import onnxruntime as ort
-    # Force CPU provider only
-    ort.set_default_logger_severity(3)  # ERROR level only
-except ImportError:
-    pass
-except Exception as e:
-    print(f"ONNX Runtime warning (expected in containers): {e}")
+# try:
+#     import warnings
+#     warnings.filterwarnings("ignore", category=UserWarning, module="onnxruntime")
+#     import onnxruntime as ort
+#     # Force CPU provider only
+#     ort.set_default_logger_severity(3)  # ERROR level only
+# except ImportError:
+#     pass
+# except Exception as e:
+#     print(f"ONNX Runtime warning (expected in containers): {e}")
+
+# CRITICAL: Set environment variables BEFORE importing any ML libraries
+# This fixes the ONNX Runtime executable stack issue in containers
+# os.environ.update({
+#     'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
+#     'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+#     'OMP_NUM_THREADS': '1',
+#     'TF_ENABLE_ONEDNN_OPTS': '0',
+#     'TOKENIZERS_PARALLELISM': 'false'
+# })
 
 # Add src directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -63,16 +73,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 console = Console()
-
-# CRITICAL: Set environment variables BEFORE importing any ML libraries
-# This fixes the ONNX Runtime executable stack issue in containers
-os.environ.update({
-    'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
-    'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
-    'OMP_NUM_THREADS': '1',
-    'TF_ENABLE_ONEDNN_OPTS': '0',
-    'TOKENIZERS_PARALLELISM': 'false'
-})
 
 class ModelPreloader:
     """Comprehensive model preloader with enhanced local cache detection."""
@@ -397,20 +397,20 @@ class ModelPreloader:
         except Exception as e:
             logger.warning(f"Error saving cache for {model_key}: {e}")
     
-    def load_pyannote_pipeline(self) -> Optional[Pipeline]:
+    def load_pyannote_pipeline(self, task_id: str) -> Optional[Pipeline]:
         """Load pyannote speaker diarization pipeline with container-safe settings."""
         try:
             console.print(f"[yellow]Loading pyannote.audio pipeline...[/yellow]")
             
             # Fix ONNX Runtime libraries first
-            try:
-                import subprocess
-                subprocess.run([
-                    'find', '/usr/local/lib/python*/site-packages/onnxruntime', 
-                    '-name', '*.so', '-exec', 'execstack', '-c', '{}', ';'
-                ], capture_output=True, timeout=10, stderr=subprocess.DEVNULL)
-            except:
-                pass
+            # try:
+            #     import subprocess
+            #     subprocess.run([
+            #         'find', '/usr/local/lib/python*/site-packages/onnxruntime', 
+            #         '-name', '*.so', '-exec', 'execstack', '-c', '{}', ';'
+            #     ], capture_output=True, timeout=10, stderr=subprocess.DEVNULL)
+            # except:
+            #     pass
             
             # Check for HuggingFace token
             hf_token = os.getenv('HUGGINGFACE_TOKEN') or os.getenv('HF_TOKEN')
@@ -429,7 +429,7 @@ class ModelPreloader:
             os.environ['ORT_LOGGING_LEVEL'] = '3'  # ERROR only
             
             # Disable other verbose logging
-            logging.getLogger('onnxruntime').setLevel(logging.ERROR)
+            # logging.getLogger('onnxruntime').setLevel(logging.ERROR)
             logging.getLogger('transformers').setLevel(logging.ERROR)
             
             try:
@@ -453,28 +453,28 @@ class ModelPreloader:
                 warnings.filters[:] = old_warning_filters
             
         except Exception as e:
-            error_msg = str(e).lower()
-            if "executable stack" in error_msg or "onnxruntime" in error_msg:
-                console.print("[yellow]ONNX Runtime container warning (attempting workaround)...[/yellow]")
+            # error_msg = str(e).lower()
+            # if "executable stack" in error_msg or "onnxruntime" in error_msg:
+            #     console.print("[yellow]ONNX Runtime container warning (attempting workaround)...[/yellow]")
                 
-                # Try alternative approach - load without ONNX-dependent components
-                try:
-                    # Try loading with CPU-only execution providers
-                    import onnxruntime as ort
-                    ort.set_default_logger_severity(4)  # FATAL only
+            #     # Try alternative approach - load without ONNX-dependent components
+            #     try:
+            #         # Try loading with CPU-only execution providers
+            #         import onnxruntime as ort
+            #         ort.set_default_logger_severity(4)  # FATAL only
                     
-                    pipeline = Pipeline.from_pretrained(
-                        "pyannote/speaker-diarization-3.1",
-                        use_auth_token=hf_token,
-                        cache_dir=str(self.cache_dir / "pyannote")
-                    )
-                    console.print(f"[green]SUCCESS: pyannote.audio loaded with workaround[/green]")
-                    return pipeline
+            #         pipeline = Pipeline.from_pretrained(
+            #             "pyannote/speaker-diarization-3.1",
+            #             use_auth_token=hf_token,
+            #             cache_dir=str(self.cache_dir / "pyannote")
+            #         )
+            #         console.print(f"[green]SUCCESS: pyannote.audio loaded with workaround[/green]")
+            #         return pipeline
                     
-                except Exception as e2:
-                    console.print(f"[red]ERROR: All pyannote loading methods failed: {e2}[/red]")
-            else:
-                console.print(f"[red]ERROR: Failed to load pyannote.audio pipeline: {e}[/red]")
+            #     except Exception as e2:
+            #         console.print(f"[red]ERROR: All pyannote loading methods failed: {e2}[/red]")
+            # else:
+            #     console.print(f"[red]ERROR: Failed to load pyannote.audio pipeline: {e}[/red]")
             
             logger.error(f"Pyannote loading failed: {e}")
             return None

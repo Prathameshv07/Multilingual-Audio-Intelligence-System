@@ -5,21 +5,21 @@ Handles model preloading and graceful fallbacks for containerized environments.
 """
 
 # Suppress ONNX Runtime warnings BEFORE any imports
-import warnings
-warnings.filterwarnings("ignore", message=".*executable stack.*")
-warnings.filterwarnings("ignore", category=UserWarning, module="onnxruntime")
+# import warnings
+# warnings.filterwarnings("ignore", message=".*executable stack.*")
+# warnings.filterwarnings("ignore", category=UserWarning, module="onnxruntime")
 
 import os
 import subprocess
 import sys
 import logging
 
-# Set critical environment variables immediately
-os.environ.update({
-    'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
-    'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
-    'ORT_DISABLE_TLS_ARENA': '1'
-})
+# # Set critical environment variables immediately
+# os.environ.update({
+#     'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
+#     'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+#     'ORT_DISABLE_TLS_ARENA': '1'
+# })
 
 # Configure logging
 logging.basicConfig(
@@ -71,39 +71,39 @@ def preload_models():
         logger.info('✅ Model preloader module found')
         
         # Set comprehensive environment variables for ONNX Runtime
-        env = os.environ.copy()
-        env.update({
-            'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
-            'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
-            'ORT_DISABLE_TLS_ARENA': '1',
-            'TF_ENABLE_ONEDNN_OPTS': '0',
-            'OMP_NUM_THREADS': '1',
-            'MKL_NUM_THREADS': '1',
-            'NUMBA_NUM_THREADS': '1',
-            'TOKENIZERS_PARALLELISM': 'false',
-            'MALLOC_ARENA_MAX': '2',
-            # Additional ONNX Runtime fixes
-            'ONNXRUNTIME_LOG_SEVERITY_LEVEL': '3',
-            'ORT_LOGGING_LEVEL': 'WARNING'
-        })
+        # env = os.environ.copy()
+        # env.update({
+        #     'ORT_DYLIB_DEFAULT_OPTIONS': 'DisableExecutablePageAllocator=1',
+        #     'ONNXRUNTIME_EXECUTION_PROVIDERS': 'CPUExecutionProvider',
+        #     'ORT_DISABLE_TLS_ARENA': '1',
+        #     'TF_ENABLE_ONEDNN_OPTS': '0',
+        #     'OMP_NUM_THREADS': '1',
+        #     'MKL_NUM_THREADS': '1',
+        #     'NUMBA_NUM_THREADS': '1',
+        #     'TOKENIZERS_PARALLELISM': 'false',
+        #     'MALLOC_ARENA_MAX': '2',
+        #     # Additional ONNX Runtime fixes
+        #     'ONNXRUNTIME_LOG_SEVERITY_LEVEL': '3',
+        #     'ORT_LOGGING_LEVEL': 'WARNING'
+        # })
         
-        # Try to fix ONNX Runtime libraries before running preloader
-        try:
-            import subprocess
-            subprocess.run([
-                'find', '/usr/local/lib/python*/site-packages/onnxruntime', 
-                '-name', '*.so', '-exec', 'execstack', '-c', '{}', ';'
-            ], capture_output=True, timeout=30)
-        except:
-            pass  # Continue if execstack fix fails
+        # # Try to fix ONNX Runtime libraries before running preloader
+        # try:
+        #     import subprocess
+        #     subprocess.run([
+        #         'find', '/usr/local/lib/python*/site-packages/onnxruntime', 
+        #         '-name', '*.so', '-exec', 'execstack', '-c', '{}', ';'
+        #     ], capture_output=True, timeout=30)
+        # except:
+        #     pass  # Continue if execstack fix fails
         
         # Try to run the preloader
         result = subprocess.run(
             ['python', 'model_preloader.py'], 
             capture_output=True, 
             text=True, 
-            timeout=300,  # 5 minute timeout
-            env=env
+            timeout=300  # 5 minute timeout
+            # env=env
         )
         
         if result.returncode == 0:
@@ -113,15 +113,15 @@ def preload_models():
             return True
         else:
             logger.warning(f'⚠️ Model preloading failed with return code {result.returncode}')
-            if result.stderr:
-                # Filter out expected ONNX warnings
-                stderr_lines = result.stderr.split('\n')
-                important_errors = [line for line in stderr_lines 
-                                  if 'executable stack' not in line.lower() 
-                                  and 'onnxruntime' not in line.lower() 
-                                  and line.strip()]
-                if important_errors:
-                    logger.warning(f'Important errors: {important_errors[:3]}')
+            # if result.stderr:
+            #     # Filter out expected ONNX warnings
+            #     stderr_lines = result.stderr.split('\n')
+            #     important_errors = [line for line in stderr_lines 
+            #                       if 'executable stack' not in line.lower() 
+            #                       and 'onnxruntime' not in line.lower() 
+            #                       and line.strip()]
+            #     if important_errors:
+            #         logger.warning(f'Important errors: {important_errors[:3]}')
             return False
             
     except subprocess.TimeoutExpired:

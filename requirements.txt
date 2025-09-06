@@ -4,7 +4,7 @@ torchaudio==2.0.2
 torchvision==0.15.2
 
 # Keep regular ONNX Runtime with container-safe environment variables
-onnxruntime==1.15.1
+# onnxruntime==1.15.1
 
 # Audio processing
 pyannote.audio==3.1.1

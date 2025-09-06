@@ -35,9 +35,9 @@ COPY requirements.txt .
 # Install Python dependencies with proper error handling
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     # Install ONNX Runtime CPU version specifically
-    pip install --no-cache-dir onnxruntime==1.16.3 && \
+    # pip install --no-cache-dir onnxruntime==1.16.3 && \
     # Fix executable stack issue
-    find /usr/local/lib/python*/site-packages/onnxruntime -name "*.so" -exec execstack -c {} \; 2>/dev/null || true && \
+    # find /usr/local/lib/python*/site-packages/onnxruntime -name "*.so" -exec execstack -c {} \; 2>/dev/null || true && \
     # Install other requirements
     pip install --no-cache-dir -r requirements.txt
 
@@ -71,9 +71,9 @@ ENV PYTHONPATH=/app \
     HF_HUB_CACHE=/app/model_cache \
     FONTCONFIG_PATH=/tmp/fontconfig \
     # Critical ONNX Runtime fixes for containers
-    ORT_DYLIB_DEFAULT_OPTIONS=DisableExecutablePageAllocator=1 \
-    ONNXRUNTIME_EXECUTION_PROVIDERS=CPUExecutionProvider \
-    ORT_DISABLE_TLS_ARENA=1 \
+    # ORT_DYLIB_DEFAULT_OPTIONS=DisableExecutablePageAllocator=1 \
+    # ONNXRUNTIME_EXECUTION_PROVIDERS=CPUExecutionProvider \
+    # ORT_DISABLE_TLS_ARENA=1 \
     CTRANSLATE2_FORCE_CPU_ISA=generic \
     # Threading and memory optimizations
     TF_CPP_MIN_LOG_LEVEL=2 \
