@@ -13,6 +13,7 @@ librosa==0.10.1
 soundfile==0.12.1
 pydub==0.25.1
 webrtcvad==2.0.10
+resampy==0.4.2
 
 # NLP and Translation
 transformers==4.35.2
@@ -53,3 +54,10 @@ safetensors==0.6.2
 ffmpeg-python==0.2.0
 httpx==0.28.1
 requests==2.31.0
+
+# Additional dependencies that might be needed
+pillow==10.0.1
+numba==0.58.1
+jinja2==3.1.2
+packaging==23.2
+joblib==1.3.2

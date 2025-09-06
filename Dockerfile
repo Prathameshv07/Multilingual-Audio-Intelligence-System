@@ -35,6 +35,16 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
+# Test critical imports to catch issues early
+RUN python -c "import librosa; print('✓ librosa OK')" && \
+    python -c "import resampy; print('✓ resampy OK')" && \
+    python -c "import transformers; print('✓ transformers OK')" && \
+    python -c "import torch; print('✓ torch OK')" && \
+    python -c "import pyannote; print('✓ pyannote OK')" && \
+    python -c "import whisper; print('✓ whisper OK')" && \
+    python -c "import fastapi; print('✓ fastapi OK')" && \
+    echo "All critical imports successful!"
+
 # Copy application code
 COPY . .
 
