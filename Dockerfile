@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies with proper error handling
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+RUN pip install --no-cache-dir --upgrade pip "setuptools<81" wheel && \
     pip install --no-cache-dir -r requirements.txt
 
 # Test critical imports to catch issues early

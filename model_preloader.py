@@ -205,28 +205,14 @@ class ModelPreloader:
         """
         try:
             if model_type == "whisper":
-                # For Whisper, check the Systran faster-whisper cache
-                whisper_cache = self.cache_dir / "whisper" / "models--Systran--faster-whisper-small"
-                required_files = ["config.json", "model.bin", "tokenizer.json", "vocabulary.txt"]
-                
-                # Find the snapshot directory
-                snapshots_dir = whisper_cache / "snapshots"
-                if not snapshots_dir.exists():
-                    return False
-                
-                # Check for any snapshot directory (there should be one)
-                snapshot_dirs = [d for d in snapshots_dir.iterdir() if d.is_dir()]
-                if not snapshot_dirs:
-                    return False
-                
-                # Check if required files exist in the snapshot
-                snapshot_path = snapshot_dirs[0]  # Use the first (and likely only) snapshot
-                for file in required_files:
-                    file_path = snapshot_path / file
-                    if not file_path.exists() or file_path.stat().st_size == 0:
-                        return False
-                
-                return True
+                # OpenAI Whisper stores each model as a single <name>.pt checkpoint
+                # under $XDG_CACHE_HOME/whisper (set to the model cache in the Dockerfile)
+                import os
+                xdg = os.environ.get("XDG_CACHE_HOME")
+                roots = [Path(xdg) / "whisper"] if xdg else []
+                roots += [self.cache_dir / "whisper", Path.home() / ".cache" / "whisper"]
+                return any((r / f"{model_name}.pt").exists() and (r / f"{model_name}.pt").stat().st_size > 0
+                           for r in roots)
                 
             elif model_type in ["mbart", "opus_mt"]:
                 # For Transformers models, check the HuggingFace cache structure

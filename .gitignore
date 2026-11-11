@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.env
+venv/
+.venv/
+
+# Runtime folders created by the app
+uploads/
+outputs/
+model_cache/
+temp_files/
+results/

@@ -408,7 +408,7 @@ class AudioIntelligencePipeline:
                 word_timestamps=transcription_seg.word_timestamps if transcription_seg else None,
                 model_info={
                     'diarization_model': 'pyannote/speaker-diarization-3.1',
-                    'transcription_model': f'faster-whisper-{self.whisper_model_size}',
+                    'transcription_model': f'whisper-{self.whisper_model_size}',
                     'translation_model': translation_result.model_used if translation_result else 'none'
                 }
             )

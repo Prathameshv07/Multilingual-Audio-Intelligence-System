@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it using the metadata below."
+type: software
+title: "Multilingual Audio Intelligence System: Speaker Diarization, Speech Recognition and Translation"
+authors:
+  - given-names: "Prathamesh Sarjerao"
+    family-names: "Vaidya"
+    orcid: "https://orcid.org/0009-0000-8091-4256"
+repository-code: "https://github.com/Prathameshv07/Multilingual-Audio-Intelligence-System"
+license: CC-BY-NC-4.0
+date-released: "2025-09-06"
+abstract: "An end-to-end audio analysis pipeline that combines pyannote.audio speaker diarization, OpenAI Whisper multilingual speech recognition and a three-tier neural machine translation fallback (Opus-MT, Google Translate wrappers, mBART50/M2M-100), with a focus on Indian languages, served through a FastAPI web interface with waveform visualisation and cached demo mode."
+keywords:
+  - "speaker diarization"
+  - "automatic speech recognition"
+  - "machine translation"
+  - "Indian languages"
+  - "Whisper"
+  - "pyannote.audio"

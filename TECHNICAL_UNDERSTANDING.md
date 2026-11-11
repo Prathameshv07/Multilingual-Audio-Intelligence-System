@@ -140,13 +140,12 @@ function setupAudioVisualization(audioElement, canvas, mode) {
 ### **Advanced Speaker Diarization & Verification**
 - **Diarization Model**: pyannote/speaker-diarization-3.1
 - **Verification Models**: SpeechBrain ECAPA-TDNN, Wav2Vec2, enhanced feature extraction
-- **Accuracy**: 95%+ speaker identification with advanced verification
 - **Real-time Factor**: 0.3x processing speed
 - **Clustering**: Advanced algorithms for speaker separation
 - **Verification**: Multi-metric similarity scoring with dynamic thresholds
 
 ### **Speech Recognition**
-- **Engine**: faster-whisper (CPU-optimized)
+- **Engine**: OpenAI Whisper (`openai-whisper`)
 - **Language Detection**: Automatic with confidence scoring
 - **Word Timestamps**: Precise timing information
 - **VAD Integration**: Voice activity detection for efficiency
@@ -155,7 +154,6 @@ function setupAudioVisualization(audioElement, canvas, mode) {
 
 ### **Tier 1: Opus-MT Models**
 - **Coverage**: 40+ language pairs including Indian languages
-- **Quality**: 90-95% BLEU scores for supported pairs
 - **Focus**: European and major Asian languages
 - **Caching**: Intelligent model loading and memory management
 
@@ -169,7 +167,6 @@ function setupAudioVisualization(audioElement, canvas, mode) {
 - **Model**: facebook/mbart-large-50-many-to-many-mmt
 - **Languages**: 50 languages including Indian
 - **Use Case**: Offline processing, rare pairs, code-switching
-- **Quality**: 75-90% accuracy for complex scenarios
 
 ## Performance Optimizations
 

@@ -11,7 +11,7 @@ The primary objective of the Multilingual Audio Intelligence System is to provid
 - **Language Support**: Support for Tamil, Hindi, Telugu, Gujarati, Kannada, and other regional languages
 - **Multi-Tier Translation**: Fallback system ensuring broad translation coverage across language pairs
 - Providing precise speaker diarization with high accuracy using pyannote.audio technology
-- Delivering multilingual automatic speech recognition supporting 100+ languages through faster-whisper integration
+- Delivering multilingual automatic speech recognition supporting 100+ languages through OpenAI Whisper integration
 - Generating neural machine translations using Opus-MT, Google API alternatives, and mBART50 models
 - **File Management**: Processing strategies for various file sizes with appropriate user guidance
 - **CPU Optimization**: Designed for broad compatibility without GPU requirements
@@ -64,7 +64,7 @@ Real-time audio visualization features:
 - **Machine Learning Libraries:**
   - PyTorch 2.0+ for deep learning framework
   - pyannote.audio 3.1+ for speaker diarization
-  - faster-whisper 0.9+ for speech recognition with language identification
+  - openai-whisper for speech recognition with language identification
   - Transformers 4.30+ for neural machine translation models
 - **Audio Processing:** 
   - librosa 0.10+ for audio analysis and feature extraction
@@ -149,7 +149,7 @@ Multilingual-Audio-Intelligence-System/
 │   ├── main.py                     # AudioIntelligencePipeline orchestrator
 │   ├── audio_processor.py          # Advanced audio preprocessing and normalization
 │   ├── speaker_diarizer.py         # pyannote.audio integration for speaker identification
-│   ├── speech_recognizer.py        # faster-whisper ASR with language detection
+│   ├── speech_recognizer.py        # Whisper ASR with language detection
 │   ├── translator.py               # 3-tier hybrid neural machine translation
 │   ├── output_formatter.py         # Multi-format result generation and export
 │   ├── demo_manager.py             # Enhanced demo file management
@@ -196,7 +196,7 @@ These cached demo results provide quick access to transcript, translation, and a
   The `speaker_diarizer.py` module uses pyannote.audio 3.1 for speaker identification with clustering algorithms, voice activity detection, and speaker embedding extraction. The `speaker_verifier.py` module extends this with advanced speaker verification using SpeechBrain, Wav2Vec2, and enhanced feature extraction for robust speaker identification and verification.
 
 - **Multilingual Speech Recognition:**
-  The `speech_recognizer.py` module integrates faster-whisper for automatic speech recognition supporting 99+ languages with language identification, word-level timestamps, and confidence scoring. Features include VAD-based processing, batch optimization, and INT8 quantization.
+  The `speech_recognizer.py` module integrates OpenAI Whisper for automatic speech recognition supporting 99 languages with language identification, word-level timestamps, and confidence scoring.
 
 - **Multi-Tier Neural Machine Translation:**
   The `translator.py` module provides translation capabilities using a 3-tier system:
@@ -349,11 +349,13 @@ graph TB
 
 ## 14. Performance Benchmarks
 
-| Configuration | Model Loading | Memory Usage | Processing Speed | Accuracy |
-|---------------|---------------|--------------|------------------|----------|
-| CPU (4 cores) | ~15 minutes | ~6 GB | 2-5x real-time | 95%+ |
-| CPU + Cache | ~30 seconds | ~4 GB | 5-10x real-time | 95%+ |
-| GPU (CUDA) | ~8 minutes | ~8 GB | 10-14x real-time | 97%+ |
+| Configuration | Model Loading | Memory Usage | Processing Speed |
+|---------------|---------------|--------------|------------------|
+| CPU (4 cores) | ~15 minutes | ~6 GB | 2-5x real-time |
+| CPU + Cache | ~30 seconds | ~4 GB | 5-10x real-time |
+| GPU (CUDA) | ~8 minutes | ~8 GB | 10-14x real-time |
+
+*Indicative timings from informal runs; accuracy has not been formally benchmarked.*
 
 ## 15. API Documentation
 

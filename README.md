@@ -5,6 +5,7 @@ colorFrom: blue
 colorTo: purple
 sdk: docker
 pinned: false
+license: cc-by-nc-4.0
 short_description: AI for multilingual transcription & Indian language support
 ---
 
@@ -53,6 +54,10 @@ The system includes sample audio files for testing and demonstration:
 - [Tamil Wikipedia Interview](https://commons.wikimedia.org/wiki/File:Parvathisri-Wikipedia-Interview-Vanavil-fm.ogg): Tamil language interview on collaborative knowledge sharing (36+ minutes)
 - [Hindi Car Trouble](https://www.tuttlepublishing.com/content/docs/9780804844383/06-18%20Part2%20Car%20Trouble.mp3): Hindi conversation about daily life scenarios (2:45)
 
+> The demo audio clips belong to their respective owners (linked above) and are included only for demonstration. They are **not** covered by this repository's license.
+
+> **Known limitation:** in long or noisy recordings Whisper can occasionally produce repetitive "looping" text for a segment (visible in a few segments of the Tamil and Hindi demo results).
+
 ### Demo Features
 - **Pre-processed Results**: Cached processing for quick demonstration
 - **Interactive Interface**: Audio preview with waveform visualization
@@ -63,7 +68,7 @@ The system includes sample audio files for testing and demonstration:
 
 ### **Core Components**
 - **Advanced Speaker Diarization**: pyannote.audio with enhanced speaker verification
-- **Multilingual Speech Recognition**: faster-whisper with enhanced language detection
+- **Multilingual Speech Recognition**: OpenAI Whisper with enhanced language detection
 - **Neural Translation**: Multi-tier system with intelligent fallback strategies
 - **Advanced Audio Processing**: Enhanced noise reduction with ML models and signal processing
 
@@ -159,7 +164,7 @@ Enhanced-Multilingual-Audio-Intelligence-System/
 │   ├── main.py                        # Enhanced pipeline orchestrator
 │   ├── audio_processor.py             # Enhanced with smart file management
 │   ├── speaker_diarizer.py            # pyannote.audio integration
-│   ├── speech_recognizer.py           # faster-whisper integration
+│   ├── speech_recognizer.py           # OpenAI Whisper integration
 │   ├── translator.py                  # 3-tier hybrid translation system
 │   ├── output_formatter.py            # Multi-format output generation
 │   ├── demo_manager.py                # Enhanced demo file management
@@ -273,11 +278,6 @@ MAX_FILE_SIZE_MB=200                       # Smart file size limit
 - **Medium Files** (5-30 min): ~2-5 minutes total processing  
 - **Large Files** (30+ min): Smart chunking with user warnings
 
-### **Translation Accuracy**
-- **Tier 1 (Opus-MT)**: 90-95% accuracy for supported language pairs
-- **Tier 2 (Google API)**: 85-95% accuracy for broad language coverage
-- **Tier 3 (mBART50)**: 75-90% accuracy for rare languages and code-switching
-
 ### **Language Support**
 - **100+ Languages**: Through hybrid translation system
 - **Indian Languages**: Tamil, Hindi, Telugu, Gujarati, Kannada, Malayalam, Bengali, Marathi, Punjabi, Urdu
@@ -326,29 +326,32 @@ sdk: docker
 pinned: false
 ```
 
-## 🤝 Contributing
-
-We welcome contributions to make this system even better for the competition:
-
-1. **Indian Language Enhancements**: Additional regional language support
-2. **Translation Improvements**: New tier implementations or fallback strategies
-3. **UI/UX Improvements**: Enhanced visualizations and user interactions
-4. **Performance Optimizations**: Speed and memory improvements
-5. **Documentation**: Improved guides and examples
-
-## 📄 License
-
-This enhanced system is released under MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
-- **Original Audio Intelligence Team**: Foundation system architecture
 - **Hugging Face**: Transformers and model hosting
 - **Google**: Translation API alternatives
 - **pyannote.audio**: Speaker diarization excellence
-- **OpenAI**: faster-whisper optimization
-- **Indian Language Community**: Testing and validation
+- **OpenAI**: Whisper speech recognition
 
 ---
 
 **A comprehensive solution for multilingual audio analysis and translation, designed to handle diverse language requirements and processing scenarios.**
+
+## Citation
+
+If you use or build on this project, please cite it. GitHub's **"Cite this repository"** button (generated from [`CITATION.cff`](CITATION.cff)) provides APA and BibTeX formats.
+
+```bibtex
+@software{vaidya_multilingualaudioint_2025,
+  author = {Vaidya, Prathamesh Sarjerao},
+  title  = {Multilingual Audio Intelligence System: Speaker Diarization, Speech Recognition and Translation},
+  year   = {2025},
+  url    = {https://github.com/Prathameshv07/Multilingual-Audio-Intelligence-System}
+}
+```
+
+## License
+
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+© 2025 Prathamesh Sarjerao Vaidya. This work is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/). You may share and adapt it for **non-commercial** purposes, provided you **give appropriate credit** and indicate any changes. See [LICENSE](LICENSE) for details.
